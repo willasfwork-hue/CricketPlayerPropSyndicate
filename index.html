@@ -512,12 +512,74 @@ tbody td { padding:9px 12px; white-space:nowrap; }
   </div>
 </div>
 
-<!-- ======= EDIT BET RESULT MODAL ======= -->
+<!-- ======= EDIT BET MODAL ======= -->
 <div class="modal-overlay" id="editBetModal">
-  <div class="modal" style="width:380px">
+  <div class="modal">
     <button class="modal-close" onclick="closeModal('editBetModal')">✕</button>
-    <div class="modal-title">Update Result</div>
-    <div id="editBetInfo" style="margin-bottom:20px;font-size:0.82rem;color:var(--muted)"></div>
+    <div class="modal-title">Edit Bet</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="eb_date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bookmaker</label>
+        <input type="text" class="form-input" id="eb_bookmaker">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Sport</label>
+        <select class="form-select" id="eb_sport">
+          <option value="Cricket">Cricket</option>
+          <option value="Basketball">Basketball</option>
+          <option value="Football">Football</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tournament</label>
+        <input type="text" class="form-input" id="eb_tournament">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fixture</label>
+      <input type="text" class="form-input" id="eb_fixture">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Market</label>
+        <input type="text" class="form-input" id="eb_market">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Player (optional)</label>
+        <input type="text" class="form-input" id="eb_player">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Selection</label>
+        <select class="form-select" id="eb_selection">
+          <option value="Under">Under</option>
+          <option value="Over">Over</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Line</label>
+        <input type="number" class="form-input" id="eb_line" step="0.5">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Stake (£)</label>
+        <input type="number" class="form-input" id="eb_stake" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Odds</label>
+        <input type="number" class="form-input" id="eb_odds" step="0.001" min="1">
+      </div>
+    </div>
     <div class="form-group">
       <label class="form-label">Result</label>
       <select class="form-select" id="eb_result">
@@ -527,9 +589,12 @@ tbody td { padding:9px 12px; white-space:nowrap; }
         <option value="Void">Void</option>
       </select>
     </div>
-    <div style="display:flex;gap:12px;justify-content:flex-end">
-      <button class="btn btn-secondary" onclick="closeModal('editBetModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEditBet()">Save</button>
+    <div style="display:flex;gap:12px;justify-content:space-between;margin-top:8px">
+      <button class="btn btn-red" onclick="deleteBet()">🗑 Delete Bet</button>
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-secondary" onclick="closeModal('editBetModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditBet()">Save Changes</button>
+      </div>
     </div>
   </div>
 </div>
@@ -912,7 +977,7 @@ function renderTable() {
       <td style="font-family:'DM Mono',monospace">${b.odds}</td>
       <td><span class="badge ${b.won==='Yes'?'badge-won':b.won==='No'?'badge-lost':b.won==='Void'?'badge-void':'badge-pending'}">${b.won==='Yes'?'WON':b.won==='No'?'LOST':b.won==='Void'?'VOID':'PENDING'}</span></td>
       <td class="${b.pl>0?'pl-pos':b.pl<0?'pl-neg':'pl-zero'}">${b.pl!==0?(b.pl>0?'+':'')+`£${b.pl.toFixed(0)}`:'—'}</td>
-      <td class="admin-only"><button class="btn btn-secondary btn-sm" onclick="openEditBet(${b.id})" style="font-size:0.58rem">Edit</button></td>
+      <td class="admin-only"><button class="btn btn-secondary btn-sm" onclick="openEditBet(${b.id})" style="font-size:0.58rem">✏ Edit</button></td>
     </tr>`).join('');
   if(currentRole) applyRole(currentRole);
 }
@@ -971,14 +1036,41 @@ function openEditBet(id) {
   const b=BETS.find(x=>x.id===id);
   if(!b)return;
   editBetId=id;
-  document.getElementById('editBetInfo').innerHTML=`<strong>${b.player||b.fixture}</strong><br>${b.tournament} · ${b.market} · £${b.stake} @ ${b.odds}`;
-  document.getElementById('eb_result').value=b.won;
+  // Populate all fields
+  if(b.date) {
+    const parts=b.date.split('/');
+    if(parts.length===3) document.getElementById('eb_date').value=`${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  document.getElementById('eb_bookmaker').value=b.bookmaker||'';
+  document.getElementById('eb_sport').value=b.sport||'Cricket';
+  document.getElementById('eb_tournament').value=b.tournament||'';
+  document.getElementById('eb_fixture').value=b.fixture||'';
+  document.getElementById('eb_market').value=b.market||'';
+  document.getElementById('eb_player').value=b.player||'';
+  document.getElementById('eb_selection').value=b.selection||'Under';
+  document.getElementById('eb_line').value=b.line||'';
+  document.getElementById('eb_stake').value=b.stake||'';
+  document.getElementById('eb_odds').value=b.odds||'';
+  document.getElementById('eb_result').value=b.won||'Pending';
   document.getElementById('editBetModal').classList.add('open');
 }
 
 function saveEditBet() {
   const b=BETS.find(x=>x.id===editBetId);
   if(!b)return;
+  // Read all fields
+  const dateRaw=document.getElementById('eb_date').value;
+  if(dateRaw){const d=new Date(dateRaw);const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),yyyy=d.getFullYear();b.date=`${dd}/${mm}/${yyyy}`;b.dateObj=d;}
+  b.bookmaker=document.getElementById('eb_bookmaker').value.trim();
+  b.sport=document.getElementById('eb_sport').value;
+  b.tournament=document.getElementById('eb_tournament').value.trim();
+  b.fixture=document.getElementById('eb_fixture').value.trim();
+  b.market=document.getElementById('eb_market').value.trim();
+  b.player=document.getElementById('eb_player').value.trim();
+  b.selection=document.getElementById('eb_selection').value;
+  b.line=parseFloat(document.getElementById('eb_line').value)||null;
+  b.stake=parseFloat(document.getElementById('eb_stake').value)||b.stake;
+  b.odds=parseFloat(document.getElementById('eb_odds').value)||b.odds;
   const result=document.getElementById('eb_result').value;
   b.won=result;
   if(result==='Yes'){b.payout=parseFloat((b.stake*b.odds).toFixed(2));b.pl=parseFloat((b.payout-b.stake).toFixed(2));}
@@ -990,6 +1082,27 @@ function saveEditBet() {
   refreshAll();
   showToast('Saving...');
   sbUpdateBet(b).then(()=>showToast('Bet updated')).catch(e=>{showToast('Save failed','error');console.error(e);});
+}
+
+async function deleteBet() {
+  const b=BETS.find(x=>x.id===editBetId);
+  if(!b)return;
+  if(!confirm(`Delete bet #${b.id} — ${b.player||b.fixture}? This cannot be undone.`))return;
+  closeModal('editBetModal');
+  BETS=BETS.filter(x=>x.id!==editBetId);
+  recalcRunning();
+  refreshAll();
+  showToast('Deleting...');
+  try {
+    if(b._sbId){
+      const {error}=await sb.from('bets').delete().eq('id',b._sbId);
+      if(error) throw error;
+    }
+    showToast('Bet deleted');
+  } catch(e){
+    showToast('Delete failed','error');
+    console.error(e);
+  }
 }
 
 // ============================================================
