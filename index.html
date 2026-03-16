@@ -225,8 +225,9 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 .loading-spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; position:relative; z-index:1; }
 @keyframes spin { to { transform:rotate(360deg); } }
 .loading-text { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; position:relative; z-index:1; }
-.loading-error { font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--red); text-align:center; max-width:400px; line-height:1.6; position:relative; z-index:1; padding:0 20px; }
+.loading-error { font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--red); text-align:center; max-width:400px; line-height:1.6; position:relative; z-index:1; padding:0 20px; white-space:pre-line; }
 
+/* WEEKLY REPORT MODAL */
 #weeklyModal .modal { width:680px; max-width:96vw; }
 .report-tabs { display:flex; gap:2px; margin-bottom:20px; border-bottom:1px solid var(--border); }
 .report-tab { padding:9px 20px; background:none; border:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:1.5px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; text-transform:uppercase; }
@@ -248,7 +249,7 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 <div id="loadingOverlay">
   <div class="loading-logo">Syndicate</div>
   <div class="loading-spinner"></div>
-  <div class="loading-text" id="loadingText">Connecting to database…</div>
+  <div class="loading-text" id="loadingText">Connecting to database...</div>
   <div class="loading-error" id="loadingError" style="display:none"></div>
 </div>
 
@@ -610,369 +611,129 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// SUPABASE CONFIG — replace with your own project details
-// ============================================================
 const SUPABASE_URL = 'https://kpnxsxedmrqjsnhztrtm.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwbnhzeGVkbXJxanNuaHp0cnRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzY2OTYsImV4cCI6MjA4OTI1MjY5Nn0.2qlYZ2ePHZ8zoSWrX1hZteT8bPmJWp9WnCRAR1WmPV8';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ============================================================
-// BET DATA — populated from Supabase on load
-// ============================================================
 let BETS = [];
 let nextId = 1;
+let TRANSACTIONS = [];
+let MEMBER_COLORS = {};
+let MEMBER_NAMES = {};
+const DEFAULT_COLORS = ['#00e5ff','#00ff87','#ffd166','#ff6b35','#a855f7','#f43f5e','#10b981'];
 
-
-  [2,"06/11/2025","Bet365","Cricket","iT20","West Indies v New Zealand","Match Total","N/A","Over",333.5,"No",150,1.833,"Yes",274.95,124.95],
-  [3,"06/11/2025","William Hill","Cricket","iT20","Australia v India","Total Runs","Suryakumar Yadav","Under",25.5,"No",100,1.833,"Yes",183.30,83.30],
-  [4,"06/11/2025","William Hill","Cricket","iT20","Australia v India","Total Runs","Glenn Maxwell","Under",17.5,"No",100,1.833,"Yes",183.30,83.30],
-  [5,"07/11/2025","Betfair","Basketball","NBA Cup","Wizards v Cavaliers","SGP","Justin Champagnie","Under",null,"No",200,2.600,"No",0,-200],
-  [6,"07/11/2025","Bet365","Basketball","NBA Cup","Wizards v Cavaliers","Match Total","N/A","Over",241.5,"No",100,1.900,"Yes",190,90],
-  [7,"08/11/2025","Bet365","Cricket","iT20","Australia v India","Total Runs","Josh Inglis","Under",21.5,"No",100,1.833,"Void",100,0],
-  [8,"08/11/2025","Bet365","Cricket","iT20","Australia v India","Total Runs","Shivam Dube","Under",19.5,"No",200,1.833,"Void",200,0],
-  [9,"13/11/2025","Bet365","Cricket","iT20","New Zealand v West Indies","Total Runs","Shai Hope","Under",25.5,"No",100,1.833,"Yes",183.30,83.30],
-  [10,"18/11/2025","Paddy Power","Cricket","Abu Dhabi T10","Quetta v Northern Warriors","Total Runs","Andries Gous","Under",15.5,"No",100,1.833,"Yes",183.30,83.30],
-  [11,"18/11/2025","William Hill","Basketball","NBA","Hawks v Pistons","Points + Rebounds","Jalen Duren","Under",31.5,"No",100,1.850,"No",0,-100],
-  [12,"18/11/2025","William Hill","Basketball","NBA","Hawks v Pistons","Points","Dyson Daniels","Under",11.5,"No",100,1.850,"No",0,-100],
-  [13,"18/11/2025","William Hill","Basketball","NBA","Spurs v Grizzlies","Rebounds","Zach Edey","Under",8.5,"No",100,1.910,"No",0,-100],
-  [14,"18/11/2025","William Hill","Basketball","NBA","Spurs v Grizzlies","Rebounds","Vince Williams","Over",3.5,"No",125,1.670,"Yes",208.75,83.75],
-  [15,"18/11/2025","William Hill","Basketball","NBA","Spurs v Grizzlies","Rebounds","Luke Kornet","Under",8.5,"No",100,1.700,"Yes",170,70],
-  [16,"18/11/2025","Bet365","Cricket","iT20","Pakistan v Zimbabwe","Total Runs","Babar Azam","Over",25.5,"No",100,1.833,"No",0,-100],
-  [17,"20/11/2025","Bet365","Cricket","iT20","Sri Lanka v Zimbabwe","Total Runs","Ryan Burl","Under",14.5,"No",100,1.833,"No",0,-100],
-  [18,"20/11/2025","William Hill","Cricket","iT20","Sri Lanka v Zimbabwe","Total Runs","Kusal Perera","Over",19.5,"No",100,1.833,"No",0,-100],
-  [19,"22/11/2025","Unibet","Cricket","iT20","Pakistan v Sri Lanka","Total Runs","Kusal Perera","Over",18.5,"No",100,1.870,"Yes",187,87],
-  [20,"22/11/2025","Bet365","Cricket","iT20","Pakistan v Sri Lanka","Total Runs","Kusal Mendis","Under",21.5,"No",100,1.833,"Yes",183.30,83.30],
-  [21,"23/11/2025","Unibet","Cricket","iT20","Pakistan v Zimbabwe","Total Runs","Fakhar Zaman","Under",18.5,"No",100,1.870,"No",0,-100],
-  [22,"29/11/2025","William Hill","Cricket","iT20","Pakistan v Sri Lanka","Total Runs","Fakhar Zaman","Under",17.5,"No",100,1.833,"Yes",183.30,83.30],
-  [23,"29/11/2025","William Hill","Cricket","iT20","Pakistan v Sri Lanka","Total Runs","Janith Liyange","Under",17.5,"No",100,1.833,"Yes",183.30,83.30],
-  [24,"29/11/2025","William Hill","Cricket","iT20","Pakistan v Sri Lanka","Total Runs","Kusal Perera","Over",17.5,"No",100,1.833,"No",0,-100],
-  [25,"29/11/2025","Betfair Exchange","Cricket","iT20","Pakistan v Sri Lanka","Match Winner","","Sri Lanka",null,"No",50,2.720,"No",0,-50],
-  [26,"02/12/2025","William Hill","Cricket","ILT20","Dubai Capitals vs Desert Vipers","Total Runs","Sam Curran","Under",18.5,"No",125,1.833,"Yes",229.13,104.13],
-  [27,"02/12/2025","William Hill","Cricket","ILT20","Dubai Capitals vs Desert Vipers","Total Runs","David Willey","Under",15.5,"No",125,1.833,"Yes",229.13,104.13],
-  [28,"02/12/2025","William Hill","Cricket","ILT20","Dubai Capitals vs Desert Vipers","Total Runs","Max Holden","Under",19.5,"No",125,1.833,"Yes",229.13,104.13],
-  [29,"03/12/2025","William Hill","Cricket","ILT20","Sharjah Warriorz vs Abu Dhabi","Total Runs","Sikandar Raza","Under",20.5,"No",200,1.833,"Yes",366.60,166.60],
-  [30,"03/12/2025","Betfair","Cricket","ILT20","Sharjah Warriorz vs Abu Dhabi","Total Runs","Tim David","Over",19.5,"No",125,1.833,"Yes",229.13,104.13],
-  [31,"03/12/2025","William Hill","Cricket","ILT20","Sharjah Warriorz vs Abu Dhabi","Team Top Bat","Tim David",null,null,"No",75,6.500,"Yes",487.50,412.50],
-  [32,"04/12/2025","Boylesport","Cricket","ILT20","Gulf Giants v MI Emirates","Total Runs","Tom Banton","Under",23.5,"No",200,1.833,"Yes",366.60,166.60],
-  [33,"04/12/2025","Boylesport","Cricket","ILT20","Gulf Giants v MI Emirates","Total Runs","Moeen Ali","Under",19.5,"No",200,1.833,"No",0,-200],
-  [34,"04/12/2025","Boylesport","Cricket","ILT20","Gulf Giants v MI Emirates","Total Runs","Rahmanullah Gurbaz","Under",22.5,"No",125,1.833,"Yes",229.13,104.13],
-  [35,"04/12/2025","William Hill","Cricket","ILT20","Gulf Giants v MI Emirates","Total Runs","Azmatullah Omarzai","Under",17.5,"No",125,1.833,"No",0,-125],
-  [36,"05/12/2025","William Hill","Cricket","ILT20","Desert Vipers v Abu Dhabi","Total Runs","Max Holden","Under",19.5,"No",125,1.833,"Yes",229.13,104.13],
-  [37,"05/12/2025","William Hill","Cricket","ILT20","Desert Vipers v Abu Dhabi","Total Runs","Sam Curran","Under",18.5,"No",150,1.833,"No",0,-150],
-  [38,"05/12/2025","William Hill","Cricket","ILT20","Desert Vipers v Abu Dhabi","Total Runs","Sherfane Rutherford","Under",19.5,"No",125,1.833,"Yes",229.13,104.13],
-  [39,"06/12/2025","William Hill","Cricket","ILT20","Dubai Capitals v Gulf Giants","Total Runs","Moeen Ali","Under",19.5,"No",200,1.833,"Yes",366.60,166.60],
-  [40,"06/12/2025","William Hill","Cricket","ILT20","Dubai Capitals v Gulf Giants","Total Runs","David Willey","Under",15.5,"No",150,1.833,"No",0,-150],
-  [41,"08/12/2025","Betfair","Cricket","ILT20","Desert Vipers v Gulf Giants","Total Runs","Moeen Ali","Under",18.5,"No",200,1.833,"Yes",366.60,166.60],
-  [42,"08/12/2025","William Hill","Cricket","ILT20","Desert Vipers v Gulf Giants","Total Runs","Azmatullah Omarzai","Under",16.5,"No",200,1.833,"No",0,-200],
-  [43,"09/12/2025","William Hill","Cricket","ILT20","MI Emirates v Desert Vipers","Total Runs","Nicholas Pooran","Over",24.5,"No",100,1.833,"Yes",183.30,83.30],
-  [44,"09/12/2025","William Hill","Cricket","ILT20","MI Emirates v Desert Vipers","Total Runs","Jonny Bairstow","Over",22.5,"No",100,1.833,"No",0,-100],
-  [45,"09/12/2025","William Hill","Cricket","T20i","India v South Africa","Total Runs","David Miller","Under",17.5,"No",150,1.833,"Yes",274.95,124.95],
-  [46,"09/12/2025","Bet365","Cricket","T20i","India v South Africa","Total Runs","Shivam Dube","Under",19.5,"No",250,2.700,"Yes",675,425],
-  [47,"10/12/2025","Bet365","Cricket","ILT20","Gulf Giants v Sharjah Warriorz","Total Runs","Moeen Ali","Under",18.5,"No",150,1.833,"Yes",274.95,124.95],
-  [48,"10/12/2025","Bet365","Cricket","ILT20","Gulf Giants v Sharjah Warriorz","Total Runs","Tim David","Over",20.5,"No",150,1.833,"No",0,-150],
-  [49,"10/12/2025","William Hill","Cricket","ILT20","Gulf Giants v Sharjah Warriorz","Total Runs","Tom Kohler Cadmore","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [50,"10/12/2025","William Hill","Cricket","ILT20","Gulf Giants v Sharjah Warriorz","Match Winner","","Sharjah Warriorz",null,"No",100,2.000,"No",0,-100],
-  [51,"10/12/2025","William Hill","Cricket","ILT20","Gulf Giants v Sharjah Warriorz","Total Runs","Azmatullah Omarzai","Under",17.5,"No",150,1.833,"No",0,-150],
-  [52,"10/12/2025","Betfair","Cricket","ILT20","Gulf Giants v Sharjah Warriorz","Total Runs","Johnson Charles","Over",17.5,"No",150,1.833,"Yes",274.95,124.95],
-  [53,"11/12/2025","William Hill","Cricket","T20i","India v South Africa","Total Runs","David Miller","Under",17.5,"No",200,1.833,"No",0,-200],
-  [54,"11/12/2025","William Hill","Cricket","T20i","India v South Africa","Total Runs","Hardik Pandya","Under",18.5,"No",200,1.833,"No",0,-200],
-  [55,"11/12/2025","William Hill","Cricket","ILT20","MI Emirates v Abu Dhabi","Total Runs","Sherfane Rutherford","Under",18.5,"No",200,1.833,"Yes",366.60,166.60],
-  [56,"11/12/2025","William Hill","Cricket","ILT20","MI Emirates v Abu Dhabi","Total Runs","Kieron Pollard","Under",17.5,"No",200,1.833,"Void",200,0],
-  [57,"11/12/2025","William Hill","Cricket","ILT20","MI Emirates v Abu Dhabi","Total Runs","Nicholas Pooran","Over",24.5,"No",200,1.833,"No",0,-200],
-  [58,"11/12/2025","William Hill","Cricket","ILT20","MI Emirates v Abu Dhabi","Total Runs","Jonny Bairstow","Over",21.5,"No",200,1.833,"Yes",366.60,166.60],
-  [59,"26/12/2025","Betfair","Cricket","SA20","Durban v Cape Town","Total Runs","Aiden Markram","Under",22.5,"No",150,1.833,"No",0,-150],
-  [60,"26/12/2025","Unibet","Cricket","SA20","Durban v Cape Town","Total Runs","Jason Smith","Under",18.5,"No",150,1.870,"No",0,-150],
-  [61,"29/12/2025","William Hill","Cricket","SA20","Eastern Cape vs Pretoria","Total Runs","Dewald Brevis","Under",22.5,"No",150,1.833,"Yes",274.95,124.95],
-  [62,"29/12/2025","William Hill","Cricket","SA20","Eastern Cape vs Pretoria","Total Runs","Mathew Breetzke","Under",21.5,"No",150,1.833,"No",0,-150],
-  [63,"29/12/2025","William Hill","Cricket","SA20","Eastern Cape vs Pretoria","Total Runs","Quinton De Kock","Under",25.5,"No",150,1.833,"No",0,-150],
-  [64,"29/12/2025","William Hill","Cricket","SA20","Eastern Cape vs Pretoria","Total Runs","Shai Hope","Under",23.5,"No",150,1.833,"No",0,-150],
-  [65,"29/12/2025","Bet365","Cricket","SA20","Eastern Cape vs Pretoria","Total Runs","Will Smeed","Under",20.5,"No",150,1.833,"No",0,-150],
-  [66,"29/12/2025","Bet365","Cricket","SA20","Eastern Cape vs Pretoria","Total Runs","Connor Esterhuizhen","Under",16.5,"No",150,1.833,"Yes",274.95,124.95],
-  [67,"29/12/2025","Bet365","Cricket","SA20","Eastern Cape vs Pretoria","Total Runs","Marco Jansen","Under",15.5,"No",300,1.833,"Yes",549.90,249.90],
-  [68,"30/12/2025","Betvictor","Cricket","ILT20","Desert Vipers vs MI Emirates","Total Runs","Krishnamurthi","Under",15.5,"No",150,1.833,"Yes",274.95,124.95],
-  [69,"30/12/2025","Bet365","Cricket","SA20","Durban v Joburg","Total Runs","Rilee Roussouw","Under",20.5,"No",150,1.833,"No",0,-150],
-  [70,"31/12/2025","Bet365","Cricket","BBL","Adelaide Strikers v Brisbane Heat","Total Runs","Liam Scott","Under",21.5,"No",150,1.833,"Yes",274.95,124.95],
-  [71,"31/12/2025","Betvictor","Cricket","SA20","Eastern Cape v Paarl","Total Runs","Lhuan-Dre Pretorius","Under",20.5,"No",150,1.833,"Yes",274.95,124.95],
-  [72,"31/12/2025","Betvictor","Cricket","SA20","Cape Town v Pretoria","Total Runs","Jason Smith","Under",18.5,"No",150,1.833,"Yes",274.95,124.95],
-  [73,"31/12/2025","Bet365","Cricket","SA20","Cape Town v Pretoria","Total Runs","Dewald Brevis","Under",22.5,"No",150,1.833,"No",0,-150],
-  [74,"01/01/2026","Bet365","Cricket","SA20","Joburg v Durban","Total Runs","Rilee Roussouw","Under",22.5,"No",300,1.833,"Yes",549.90,249.90],
-  [75,"01/01/2026","Bet365","Cricket","SA20","Joburg v Durban","Total Runs","Faf Du Plessis","Under",25.5,"No",150,1.833,"No",0,-150],
-  [76,"01/01/2026","Bet365","Cricket","SA20","Joburg v Durban","Total Runs","Wiaan Mulder","Under",19.5,"No",150,1.833,"Yes",274.95,124.95],
-  [77,"01/01/2026","Bet365","Cricket","ILT20","ADKR v Dubai","Total Runs","Shayan Jahngir","Under",18.5,"No",150,1.833,"Yes",274.95,124.95],
-  [78,"01/01/2026","Betfair Exchange","Cricket","ILT20","ADKR v Dubai","Match Winner","","Abu Dhabi KR",null,"No",150,1.833,"Yes",274.95,124.95],
-  [79,"02/01/2026","Bet365","Cricket","BBL","Brisbane Heat v Melbourne Stars","Total Runs","Thomas Rogers","Under",19.5,"No",100,1.833,"Yes",183.30,83.30],
-  [80,"02/01/2026","Bet365","Cricket","BBL","Brisbane Heat v Melbourne Stars","Total Runs","Glenn Maxwell","Under",25.5,"No",100,1.833,"Yes",183.30,83.30],
-  [81,"02/01/2026","Bet365","Cricket","BBL","Brisbane Heat v Melbourne Stars","Total Runs","Hugh Weibgen","Under",19.5,"No",100,1.833,"Yes",183.30,83.30],
-  [82,"02/01/2026","William Hill","Cricket","SA20","Paarl v Cape Town","Total Runs","Lhuan-Dre Pretorius","Under",21.5,"No",150,1.833,"No",0,-150],
-  [83,"02/01/2026","Bet365","Cricket","SA20","Paarl v Cape Town","Total Runs","Rubin Hermann","Under",19.5,"No",150,1.833,"Void",150,0],
-  [84,"02/01/2026","Betfair","Cricket","SA20","Paarl v Cape Town","Total Runs","Reeza Hendricks","Under",21.5,"No",150,1.833,"Void",150,0],
-  [85,"02/01/2026","William Hill","Cricket","SA20","Paarl v Cape Town","Total Runs","Jason Smith","Under",16.5,"No",150,1.833,"Yes",274.95,124.95],
-  [86,"02/01/2026","Boylesport","Cricket","ILT20","ADKR v MIE","Match Winner","","Abu Dhabi KR",null,"No",150,2.100,"No",0,-150],
-  [87,"02/01/2026","Bet365","Cricket","ILT20","ADKR v MIE","Total Runs","Tom Banton","Under",21.5,"No",150,1.833,"No",0,-150],
-  [88,"02/01/2026","Betfred","Cricket","ILT20","ADKR v MIE","Total Runs","Brandon McMullen","Under",16.5,"No",300,1.833,"Yes",549.90,249.90],
-  [89,"02/01/2026","Unibet","Cricket","ILT20","ADKR v MIE","Total Runs","Andre Fletcher","Under",20.5,"No",150,1.833,"Yes",274.95,124.95],
-  [90,"02/01/2026","William Hill","Cricket","ILT20","ADKR v MIE","Total Runs","Sanjay Krishnmurthi","Under",15.5,"No",300,1.870,"Yes",561,261],
-  [91,"02/01/2026","Betfair Exchange","Cricket","SA20","Paarl v Cape Town","Match Winner","","Paarl Royals",null,"No",75,3.050,"Yes",228.75,153.75],
-  [92,"03/01/2026","William Hill","Cricket","BBL","Sydney Thunder v Hobart Hurricanes","Total Runs","Sam Billings","Under",19.5,"No",150,1.833,"No",0,-150],
-  [93,"03/01/2026","Bet365","Cricket","BBL","Sydney Thunder v Hobart Hurricanes","Total Runs","Ben McDermott","Under",25.5,"No",150,1.833,"Yes",274.95,124.95],
-  [94,"04/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Melbourne Renegades","Total Runs","Thomas Rogers","Under",18.5,"No",150,1.833,"Yes",274.95,124.95],
-  [95,"04/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Melbourne Renegades","Total Runs","Campbell Kellaway","Under",22.5,"No",150,1.833,"No",0,-150],
-  [96,"04/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Melbourne Renegades","Total Runs","Josh Brown","Under",19.5,"No",150,1.833,"No",0,-150],
-  [97,"04/01/2026","Betvictor","Cricket","BBL","Melbourne Stars v Melbourne Renegades","Total Runs","Jake Fraser-McGurk","Under",17.5,"No",150,1.850,"Yes",277.50,127.50],
-  [98,"04/01/2026","Betvictor","Cricket","BBL","Perth Scorchers v Adelaide Strikers","Total Runs","Jason Sangha","Under",17.5,"No",150,1.850,"Yes",277.50,127.50],
-  [99,"04/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Adelaide Strikers","Total Runs","Cooper Connolly","Under",24.5,"No",150,1.833,"Yes",274.95,124.95],
-  [100,"04/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Adelaide Strikers","Total Runs","Mitch Marsh","Under",26.5,"No",150,1.833,"No",0,-150],
-  [101,"04/01/2026","Bet365","Cricket","ILT20","Desert Vipers v MI Emirates","Total Runs","Shakib Al Hasan","Under",17.5,"No",150,1.833,"No",0,-150],
-  [102,"04/01/2026","Betvictor","Cricket","ILT20","Desert Vipers v MI Emirates","Total Runs","Sanjay Krishnmurthi","Under",13.5,"No",150,1.850,"Yes",277.50,127.50],
-  [103,"04/01/2026","Betvictor","Cricket","ILT20","Desert Vipers v MI Emirates","Total Runs","Jason Roy","Under",14.5,"No",150,1.850,"Yes",277.50,127.50],
-  [104,"04/01/2026","Bet365","Cricket","SA20","MI Cape Town v Paarl Royals","Total Runs","Lhuan-Dre Pretorius","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [105,"04/01/2026","Bet365","Cricket","SA20","MI Cape Town v Paarl Royals","Total Runs","Sikandar Raza","Under",23.5,"No",300,1.833,"Void",300,0],
-  [106,"04/01/2026","Betvictor","Cricket","SA20","MI Cape Town v Paarl Royals","Total Runs","Jason Smith","Under",21.5,"No",150,1.850,"Yes",277.50,127.50],
-  [107,"04/01/2026","Betvictor","Cricket","SA20","MI Cape Town v Paarl Royals","Total Runs","Kyle Verreynne","Under",18.5,"No",150,1.850,"Yes",277.50,127.50],
-  [108,"04/01/2026","Betvictor","Cricket","SA20","MI Cape Town v Paarl Royals","Total Runs","Rubin Hermann","Under",20.5,"No",150,1.850,"Yes",277.50,127.50],
-  [109,"05/01/2026","Bet365","Cricket","SA20","Pretoria v Eastern Cape","Total Runs","Shai Hope","Under",24.5,"No",150,1.833,"Yes",274.95,124.95],
-  [110,"05/01/2026","Bet365","Cricket","SA20","Pretoria v Eastern Cape","Total Runs","Bryce Parsons","Under",17.5,"No",150,1.833,"No",0,-150],
-  [111,"05/01/2026","Bet365","Cricket","SA20","Pretoria v Eastern Cape","Total Runs","Mathew Breetzke","Under",23.5,"No",150,1.833,"Void",150,0],
-  [112,"05/01/2026","Betfair","Cricket","SA20","Pretoria v Eastern Cape","Total Runs","Dewald Brevis","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [113,"06/01/2026","Boylesport","Cricket","SA20","Joburg v Cape Town","Total Runs","Faf du Plessis","Under",25.5,"No",150,1.833,"No",0,-150],
-  [114,"06/01/2026","Boylesport","Cricket","SA20","Joburg v Cape Town","Total Runs","Mathew De Villiers","Under",19.5,"No",150,1.833,"No",0,-150],
-  [115,"06/01/2026","Bet365","Cricket","SA20","Joburg v Cape Town","Total Runs","Wiaan Mulder","Under",20.5,"No",150,1.833,"Yes",274.95,124.95],
-  [116,"06/01/2026","Betfair","Cricket","SA20","Joburg v Cape Town","Total Runs","Rilee Rossouw","Under",21.5,"No",150,1.833,"Void",150,0],
-  [117,"06/01/2026","Betfred","Cricket","SA20","Joburg v Cape Town","Total Runs","Jason Smith","Under",16.5,"No",150,1.833,"No",0,-150],
-  [118,"07/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Melbourne Renegades","Total Runs","Cooper Connolly","Under",27.5,"No",150,1.833,"Yes",274.95,124.95],
-  [119,"07/01/2026","William Hill","Cricket","iT20","Sri Lanka v Pakistan","Total Runs","Fakhar Zaman","Under",21.5,"No",150,1.833,"Yes",274.95,124.95],
-  [120,"07/01/2026","Bet365","Cricket","SA20","Durban v Pretoria","Total Runs","Wihan Lubbe","Under",18.5,"No",300,1.833,"Void",300,0],
-  [121,"07/01/2026","Betfred","Cricket","SA20","Durban v Pretoria","Total Runs","Dewald Brevis","Under",21.5,"No",150,1.833,"Yes",274.95,124.95],
-  [122,"08/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Sydney Sixers","Total Runs","Campbell Kellaway","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [123,"08/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Sydney Sixers","Total Runs","Glenn Maxwell","Under",22.5,"No",150,1.833,"Yes",274.95,124.95],
-  [124,"08/01/2026","Bet365","Cricket","SA20","Joburg v Paarl","Total Runs","Donovan Ferreira","Under",18.5,"No",150,1.833,"Yes",274.95,124.95],
-  [125,"08/01/2026","Betfred","Cricket","SA20","Joburg v Paarl","Total Runs","Wiaan Mulder","Under",17.5,"No",150,1.833,"Yes",274.95,124.95],
-  [126,"10/01/2026","Betvictor","Cricket","SA20","Joburg v Cape Town","Total Runs","Jason Smith","Under",16.5,"No",150,1.850,"Yes",277.50,127.50],
-  [127,"10/01/2026","Bet365","Cricket","SA20","Joburg v Cape Town","Total Runs","Wiaan Mulder","Under",17.5,"No",150,1.833,"Yes",274.95,124.95],
-  [128,"11/01/2026","Bet365","Cricket","SA20","Eastern Cape v Durban","Total Runs","Mathew Breetzke","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [129,"11/01/2026","Bet365","Cricket","iT20","Sri Lanka v Pakistan","Total Runs","Kusal Mendis","Under",23.5,"No",150,1.833,"No",0,-150],
-  [130,"11/01/2026","William Hill","Cricket","iT20","Sri Lanka v Pakistan","Total Runs","Charith Asalanka","Under",17.5,"No",150,1.833,"No",0,-150],
-  [131,"12/01/2026","Bet365","Cricket","BBL","Sydney Thunder v Melbourne R","Total Runs","Josh Brown","Under",24.5,"No",150,1.833,"No",0,-150],
-  [132,"12/01/2026","Bet365","Cricket","BBL","Sydney Thunder v Melbourne R","Total Runs","Mathew Gilkes","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [133,"12/01/2026","Bet365","Cricket","BBL","Sydney Thunder v Melbourne R","Total Runs","Jake Fraser-McGurk","Under",18.5,"No",150,1.833,"No",0,-150],
-  [134,"12/01/2026","Bet365","Cricket","SA20","Pretoria v Cape Town","Total Runs","Jason Smith","Under",21.5,"No",150,1.833,"Yes",274.95,124.95],
-  [135,"12/01/2026","William Hill","Cricket","SA20","Pretoria v Cape Town","Total Runs","Karim Janat","Under",16.5,"No",150,1.833,"Yes",183.30,83.30],
-  [136,"12/01/2026","William Hill","Cricket","SA20","Pretoria v Cape Town","Total Runs","Nicholas Pooran","Over",20.5,"No",150,1.833,"No",0,-150],
-  [137,"13/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Adelaide Strikers","Total Runs","Campbell Kellaway","Under",22.5,"No",150,1.833,"Yes",183.30,83.30],
-  [138,"13/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Adelaide Strikers","Total Runs","Marcus Stoinis","Under",25.5,"No",150,1.833,"Yes",183.30,83.30],
-  [139,"13/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Adelaide Strikers","Total Runs","Sam Harper","Under",23.5,"No",150,1.833,"Yes",520,320],
-  [140,"13/01/2026","Bet365","Cricket","BBL","Melbourne Stars v Adelaide Strikers","Total Runs","Liam Scott","Under",21.5,"No",150,1.833,"Yes",190,90],
-  [141,"13/01/2026","Boylesport","Cricket","BBL","Melbourne Stars v Adelaide Strikers","Total Runs","Chris Lynn","Under",21.5,"No",150,1.833,"Yes",183.30,83.30],
-  [142,"13/01/2026","William Hill","Cricket","BBL","Melbourne Stars v Adelaide Strikers","Total Runs","Matthew Short","Under",28.5,"No",150,1.833,"Yes",274.95,124.95],
-  [143,"13/01/2026","William Hill","Cricket","SA20","Paarl v Durban","Total Runs","Lhuan-Dre Pretorius","Under",21.5,"No",150,1.833,"Yes",274.95,124.95],
-  [144,"13/01/2026","Bet365","Cricket","SA20","Paarl v Durban","Total Runs","Rubin Hermann","Under",19.5,"No",150,1.833,"No",0,-150],
-  [145,"13/01/2026","Bet365","Cricket","SA20","Paarl v Durban","Total Runs","Dan Lawrence","Under",18.5,"No",150,1.833,"No",0,-150],
-  [146,"14/01/2026","Bet365","Cricket","BBL","Hobart Hurricanes v Brisbane Heat","Total Runs","Nikhil Chaudhary","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [147,"14/01/2026","Bet365","Cricket","BBL","Hobart Hurricanes v Brisbane Heat","Total Runs","Ben McDermott","Under",24.5,"No",150,1.833,"No",0,-150],
-  [148,"14/01/2026","William Hill","Cricket","BBL","Hobart Hurricanes v Brisbane Heat","Total Runs","Max Bryant","Under",17.5,"No",150,1.833,"No",0,-150],
-  [149,"14/01/2026","Bet365","Cricket","SA20","Eastern Cape v Joburg","Total Runs","Wiaan Mulder","Under",18.5,"No",150,1.833,"Yes",274.95,124.95],
-  [150,"14/01/2026","Bet365","Cricket","SA20","Eastern Cape v Joburg","Total Runs","Matthew Breetzke","Under",21.5,"No",150,1.833,"Yes",274.95,124.95],
-  [151,"14/01/2026","Bet365","Cricket","SA20","Eastern Cape v Joburg","Total Runs","Michael Pepper","Under",20.5,"No",150,1.833,"No",0,-150],
-  [152,"14/01/2026","Bet365","Cricket","SA20","Eastern Cape v Joburg","Total Runs","Matthew De Villiers","Under",19.5,"No",150,1.833,"Yes",274.95,124.95],
-  [153,"15/01/2026","Bet365","Cricket","BBL","Melbourne Renegades v Perth Scorchers","Total Runs","Josh Brown","Under",22.5,"No",300,1.833,"Yes",549.90,249.90],
-  [154,"15/01/2026","Bet365","Cricket","BBL","Melbourne Renegades v Perth Scorchers","Total Runs","Fraser McGurk","Under",17.5,"No",300,1.833,"No",0,-300],
-  [155,"15/01/2026","William Hill","Cricket","BBL","Melbourne Renegades v Perth Scorchers","Total Runs","Finn Allen","Under",22.5,"No",300,1.833,"No",0,-300],
-  [156,"15/01/2026","Bet365","Cricket","SA20","Pretoria v Paarl","Total Runs","Wihan Lubbe","Under",17.5,"No",300,1.833,"Yes",549.90,249.90],
-  [157,"16/01/2026","Bet365","Cricket","BBL","Sydney Sixers v Sydney Thunder","Total Runs","Babar Azam","Over",19.5,"No",300,1.833,"Yes",549.90,249.90],
-  [158,"16/01/2026","Boylesport","Cricket","BBL","Sydney Sixers v Sydney Thunder","Total Runs","Josh Phillippe","Under",23.5,"No",300,1.833,"Yes",549.90,249.90],
-  [159,"16/01/2026","Bet365","Cricket","BBL","Sydney Sixers v Sydney Thunder","Total Runs","Moises Henriques","Under",20.5,"No",300,1.833,"Yes",549.90,249.90],
-  [160,"16/01/2026","Bet365","Cricket","BBL","Sydney Sixers v Sydney Thunder","Total Runs","Matthew Gilkes","Under",20.5,"No",300,1.833,"Yes",549.90,249.90],
-  [161,"16/01/2026","Bet365","Cricket","BBL","Sydney Sixers v Sydney Thunder","Total Runs","Sam Konstas","Under",19.5,"No",300,1.833,"Yes",549.90,249.90],
-  [162,"16/01/2026","Bet365","Cricket","BBL","Sydney Sixers v Sydney Thunder","Total Runs","Sam Billings","Under",21.5,"No",300,1.833,"Yes",549.90,249.90],
-  [163,"16/01/2026","Bet365","Cricket","SA20","Cape Town v Eastern Cape","Total Runs","Mathew Breetzke","Under",22.5,"No",300,1.833,"Yes",549.90,249.90],
-  [164,"16/01/2026","William Hill","Cricket","SA20","Cape Town v Eastern Cape","Total Runs","Jason Smith","Under",17.5,"No",300,1.833,"Yes",549.90,249.90],
-  [165,"17/01/2026","Bet365","Cricket","SA20","Durban v Paarl","Total Runs","Sunil Narine","Under",16.5,"No",150,1.833,"Yes",274.95,124.95],
-  [166,"17/01/2026","Bet365","Cricket","SA20","Durban v Paarl","Total Runs","David Bedingham","Under",17.5,"No",150,1.833,"Void",150,0],
-  [167,"17/01/2026","Bet365","Cricket","SA20","Joburg v Pretoria","Total Runs","Michael Pepper","Under",21.5,"No",150,1.833,"Void",150,0],
-  [168,"17/01/2026","Bet365","Cricket","SA20","Joburg v Pretoria","Total Runs","Jordan Cox","Under",24.5,"No",150,1.833,"Void",150,0],
-  [169,"17/01/2026","Betfred","Cricket","SA20","Joburg v Pretoria","Total Runs","Matthew De Villiers","Under",19.5,"No",150,1.833,"Yes",274.95,124.95],
-  [170,"17/01/2026","Bet365","Cricket","BBL","Adelaide Strikers v Melbourne Renegades","Total Runs","Liam Scott","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [171,"17/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Melbourne Stars","Total Runs","Aaron Hardie","Under",20.5,"No",150,1.833,"No",0,-150],
-  [172,"17/01/2026","William Hill","Cricket","BBL","Perth Scorchers v Melbourne Stars","Total Runs","Finn Allen","Under",24.5,"No",150,1.833,"No",0,-150],
-  [173,"17/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Melbourne Stars","Total Runs","Campbell Kellaway","Under",21.5,"No",150,1.833,"Yes",274.95,124.95],
-  [174,"17/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Melbourne Stars","Total Runs","Marcus Stoinis","Under",23.5,"No",150,1.833,"No",0,-150],
-  [175,"17/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Melbourne Stars","Total Runs","Sam Harper","Under",23.5,"No",150,1.833,"Yes",274.95,124.95],
-  [176,"17/01/2026","Bet365","Cricket","BBL","Perth Scorchers v Melbourne Stars","Total Runs","Tom Rogers","Under",17.5,"No",150,1.833,"Yes",274.95,124.95],
-  [177,"17/01/2026","Unibet","Cricket","BBL","Perth Scorchers v Melbourne Stars","Total Runs","Glenn Maxwell","Under",20.5,"No",150,1.870,"Yes",280.50,130.50],
-  [178,"18/01/2026","Bet365","Cricket","iT20","Afghanistan v West Indies","Total Runs","Ibrahim Zadran","Under",23.5,"No",150,1.833,"No",0,-150],
-  [179,"18/01/2026","Bet365","Cricket","iT20","Afghanistan v West Indies","Total Runs","Rahmanullah Gurbaz","Under",22.5,"No",150,1.833,"Yes",274.95,124.95],
-  [180,"18/01/2026","Bet365","Cricket","iT20","Afghanistan v West Indies","Total Runs","Evin Lewis","Under",18.5,"No",150,1.833,"Yes",274.95,124.95],
-  [181,"18/01/2026","Betvictor","Cricket","iT20","Afghanistan v West Indies","Total Runs","Mohammed Nabi","Under",16.5,"No",150,1.850,"Void",150,0],
-  [182,"22/01/2026","Bet365","Cricket","SA20","Paarl v Joburg","Total Runs","Michael Pepper","Under",21.5,"No",150,1.833,"Void",150,0],
-  [183,"22/01/2026","William Hill","Cricket","SA20","Paarl v Joburg","Total Runs","Leus Du Plooy","Under",19.5,"No",150,1.833,"Yes",274.95,124.95],
-  [184,"27/01/2026","William Hill","Cricket","iT20","South Africa v West Indies","Total Runs","Shimron Hetmyer","Under",18.5,"No",200,1.833,"No",0,-200],
-  [185,"27/01/2026","William Hill","Cricket","iT20","South Africa v West Indies","Total Runs","Aidan Markram","Under",22.5,"No",200,1.833,"No",0,-200],
-  [186,"28/01/2026","Betfred","Cricket","iT20","India v New Zealand","Total Runs","Abhishek Sharma","Under",28.5,"No",200,1.833,"Yes",366.60,166.60],
-  [187,"28/01/2026","Betfred","Cricket","iT20","India v New Zealand","Total Runs","Sanju Samson","Under",25.5,"No",200,1.833,"Yes",366.60,166.60],
-  [188,"28/01/2026","Bet365","Cricket","iT20","India v New Zealand","Total Runs","Rachin Ravindra","Under",19.5,"No",200,1.833,"Yes",366.60,166.60],
-  [189,"29/01/2026","Bet365","Cricket","iT20","Pakistan v Australia","Total Runs","Mitchell Owen","Under",18.5,"No",200,1.833,"Yes",366.60,166.60],
-  [190,"29/01/2026","Bet365","Cricket","iT20","Pakistan v Australia","20 Overs","","Under",171.5,"Yes",200,1.900,"Yes",380,180],
-  [191,"29/01/2026","Bet365","Cricket","iT20","South Africa v West Indies","Total Runs","Aiden Markram","Over",21.5,"No",200,1.833,"No",0,-200],
-  [192,"29/01/2026","Bet365","Cricket","iT20","South Africa v West Indies","Total Runs","Shimron Hetmyer","Under",17.5,"No",200,1.833,"No",0,-200],
-  [193,"29/01/2026","William Hill","Cricket","iT20","South Africa v West Indies","Total Runs","Brandon King","Under",19.5,"No",200,1.833,"No",0,-200],
-  [194,"30/01/2026","Bet365","Cricket","iT20","Sri Lanka v England","Total Runs","Jos Buttler","Over",22.5,"No",200,1.833,"No",0,-200],
-  [195,"30/01/2026","Bet365","Cricket","iT20","Sri Lanka v England","Total Runs","Tom Banton","Under",20.5,"No",200,1.833,"No",0,-200],
-  [196,"31/01/2026","Bet365","Cricket","iT20","Pakistan v Australia","Total Runs","Travis Head","Under",26.5,"No",200,1.833,"Yes",366.60,166.60],
-  [197,"31/01/2026","Bet365","Cricket","iT20","India v New Zealand","Total Runs","Sanju Samson","Under",25.5,"No",200,1.833,"Yes",366.60,166.60],
-  [198,"31/01/2026","Bet365","Cricket","iT20","India v New Zealand","Total Runs","Abhishek Sharma","Under",27.5,"No",200,1.833,"No",0,-200],
-  [199,"31/01/2026","Bet365","Cricket","iT20","India v New Zealand","Total Runs","Rinku Singh","Under",21.5,"No",200,1.833,"Yes",366.60,166.60],
-  [200,"31/01/2026","Bet365","Cricket","iT20","India v New Zealand","Total Runs","Rachin Ravindra","Under",19.5,"No",200,1.833,"No",0,-200],
-  [201,"31/01/2026","William Hill","Cricket","iT20","India v New Zealand","Total Runs","Glenn Phillips","Under",22.5,"No",200,1.833,"Yes",366.60,166.60],
-  [202,"31/01/2026","William Hill","Cricket","iT20","India v New Zealand","Total Runs","Mark Chapman","Under",17.5,"No",200,1.833,"Void",200,0],
-  [203,"31/01/2026","William Hill","Cricket","iT20","South Africa v West Indies","Total Runs","Brandon King","Under",21.5,"No",200,1.833,"Void",200,0],
-  [204,"31/01/2026","Bet365","Cricket","iT20","South Africa v West Indies","Total Runs","Shimron Hetmyer","Under",23.5,"No",200,1.833,"No",0,-200],
-  [205,"31/01/2026","William Hill","Cricket","iT20","South Africa v West Indies","Total Runs","Tristan Stubbs","Under",18.5,"No",200,1.833,"Yes",366.60,166.60],
-  [206,"01/02/2026","William Hill","Cricket","iT20","Sri Lanka v England","Total Runs","Kusal Mendis","Under",22.5,"No",200,1.833,"No",0,-200],
-  [207,"01/02/2026","William Hill","Cricket","iT20","Sri Lanka v England","Total Runs","Tom Banton","Under",20.5,"No",200,1.833,"No",0,-200],
-  [208,"03/02/2026","William Hill","Cricket","iT20","Sri Lanka v England","Total Runs","Pathum Nissanka","Over",22.5,"No",200,1.833,"Yes",366.60,166.60],
-  [209,"03/02/2026","Bet365","Cricket","iT20","Sri Lanka v England","Total Runs","Phil Salt","Under",23.5,"No",200,1.833,"Void",200,0],
-  [210,"03/02/2026","William Hill","Cricket","iT20","Sri Lanka v England","Total Runs","Charith Asalanka","Under",17.5,"No",200,1.833,"Void",200,0],
-  [211,"07/02/2026","William Hill","Cricket","T20 World Cup","West Indies v Scotland","Total Runs","Shai Hope","Over",26.5,"No",250,1.833,"No",0,-250],
-  [212,"07/02/2026","Bet365","Cricket","T20 World Cup","West Indies v Scotland","Total Runs","Brandon McMullen","Over",14.5,"No",250,1.833,"No",0,-250],
-  [213,"07/02/2026","William Hill","Cricket","T20 World Cup","West Indies v Scotland","Total Runs","Michael Jones","Over",14.5,"No",250,1.833,"No",0,-250],
-  [214,"07/02/2026","","Cricket","T20 World Cup","Pakistan v Netherlands","Total Runs","Babar Azam","Under",26.5,"No",250,1.833,"Yes",458.25,208.25],
-  [215,"07/02/2026","","Cricket","T20 World Cup","Pakistan v Netherlands","Total Runs","Sahibzada Farhan","Under",27.5,"No",250,1.833,"No",0,-250],
-  [216,"07/02/2026","","Cricket","T20 World Cup","India v USA","Player H2H","Andries Gous","Gous",null,"No",150,2.000,"Yes",300,150],
-  [217,"08/02/2026","","Cricket","T20 World Cup","New Zealand v Afghanistan","Total Runs","Rachin Ravindra","Under",19.5,"No",250,1.833,"Yes",458.25,208.25],
-  [218,"08/02/2026","","Cricket","T20 World Cup","New Zealand v Afghanistan","Total Runs","Ibrahim Zadran","Under",22.5,"No",250,1.833,"Yes",458.25,208.25],
-  [219,"08/02/2026","","Cricket","T20 World Cup","New Zealand v Afghanistan","Total Runs","Rahmanullah Gurbaz","Under",22.5,"No",250,1.833,"No",0,-250],
-  [220,"08/02/2026","","Cricket","T20 World Cup","Sri Lanka v Ireland","Total Runs","Harry Tector","Under",21.5,"No",250,1.833,"No",0,-250],
-  [221,"08/02/2026","","Cricket","T20 World Cup","Sri Lanka v Ireland","Total Runs","Paul Stirling","Under",19.5,"No",250,1.833,"Yes",458.25,208.25],
-  [222,"08/02/2026","","Cricket","T20 World Cup","Sri Lanka v Ireland","Total Runs","Lorcan Tucker","Under",18.5,"No",250,1.833,"No",0,-250],
-  [223,"08/02/2026","","Cricket","T20 World Cup","Sri Lanka v Ireland","Total Runs","Benjamin Calitz","Under",15.5,"No",250,1.833,"Yes",458.25,208.25],
-  [224,"08/02/2026","","Cricket","T20 World Cup","England v Nepal","Total Runs","Jos Buttler","Over",29.5,"No",250,1.833,"No",0,-250],
-  [225,"09/02/2026","","Cricket","T20 World Cup","South Africa v Canada","Total Runs","Tristan Stubbs","Under",20.5,"No",250,1.833,"No",0,-250],
-  [226,"09/02/2026","","Cricket","T20 World Cup","South Africa v Canada","Total Runs","Aiden Markram","Over",24.5,"No",250,1.833,"Yes",458.25,208.25],
-  [227,"11/02/2026","William Hill","Cricket","T20 World Cup","Australia v Ireland","Total Runs","Paul Stirling","Under",17.5,"No",250,1.833,"Yes",458.25,208.25],
-  [228,"11/02/2026","William Hill","Cricket","T20 World Cup","Australia v Ireland","Total Runs","Josh Inglis","Under",23.5,"No",250,1.833,"No",0,-250],
-  [229,"11/02/2026","Bet365","Cricket","T20 World Cup","Australia v Ireland","Total Runs","Travis Head","Under",29.5,"No",250,1.833,"Yes",458.25,208.25],
-  [230,"11/02/2026","William Hill","Cricket","T20 World Cup","England v West Indies","Total Runs","Jos Buttler","Over",25.5,"No",250,1.833,"No",0,-250],
-  [231,"11/02/2026","Bet365","Cricket","T20 World Cup","England v West Indies","Total Runs","Jacob Bethell","Under",23.5,"No",250,1.833,"No",0,-250],
-  [232,"11/02/2026","Bet365","Cricket","T20 World Cup","England v West Indies","Total Runs","Tom Banton","Under",23.5,"No",250,1.833,"Yes",458.25,208.25],
-  [233,"11/02/2026","Bet365","Cricket","T20 World Cup","England v West Indies","Total Runs","Brandon King","Under",23.5,"No",250,1.833,"Yes",458.25,208.25],
-  [234,"11/02/2026","Bet365","Cricket","T20 World Cup","England v West Indies","Total Runs","Shai Hope","Under",27.5,"No",250,1.833,"Yes",458.25,208.25],
-  [235,"11/02/2026","Bet365","Cricket","T20 World Cup","South Africa v Afghanistan","Total Runs","Aiden Markram","Over",21.5,"No",250,1.833,"No",0,-250],
-  [236,"11/02/2026","Bet365","Cricket","T20 World Cup","South Africa v Afghanistan","Total Runs","Ibrahim Zadran","Under",23.5,"No",250,1.833,"Yes",458.25,208.25],
-  [237,"11/02/2026","Bet365","Cricket","T20 World Cup","South Africa v Afghanistan","Total Runs","Rahmanullah Gurbaz","Under",23.5,"No",250,1.833,"No",0,-250],
-  [238,"11/02/2026","William Hill","Cricket","T20 World Cup","South Africa v Afghanistan","Total Runs","Tristan Stubbs","Under",19.5,"No",250,1.833,"Yes",458.25,208.25],
-  [239,"13/02/2026","BetMGM","Cricket","T20 World Cup","","Total Runs","Travis Head","Under",30.5,"No",200,1.750,"Yes",350,150],
-  [240,"13/02/2026","BetMGM","Cricket","T20 World Cup","","Total Runs","Josh Inglis","Under",28.5,"No",200,1.750,"Yes",350,150],
-  [241,"13/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","Sikandar Raza","Under",17.5,"No",250,1.833,"No",0,-250],
-  [242,"13/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Glenn Maxwell","Under",17.5,"No",250,1.833,"No",0,-250],
-  [243,"14/02/2026","BetMGM","Cricket","T20 World Cup","","Total Runs","Aiden Markram","Under",26.5,"No",250,1.750,"No",0,-250],
-  [244,"14/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Phil Salt","Over",23.5,"No",250,1.833,"No",0,-250],
-  [245,"14/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","Jos Buttler","Over",25.5,"No",250,1.833,"No",0,-250],
-  [246,"14/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","Tom Bruce","Under",18.5,"No",250,1.833,"No",0,-250],
-  [247,"15/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Ishan Kishan","Under",27.5,"No",250,1.833,"No",0,-250],
-  [248,"15/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Sahibzada Farhan","Under",22.5,"No",250,1.833,"Yes",458.25,208.25],
-  [249,"15/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Saim Ayub","Under",20.5,"No",250,1.833,"Yes",458.25,208.25],
-  [250,"15/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Salman Agha","Under",19.5,"No",250,1.833,"Yes",458.25,208.25],
-  [251,"15/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Babar Azam","Under",22.5,"No",250,1.833,"Yes",458.25,208.25],
-  [252,"15/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Usman Khan","Under",16.5,"No",250,1.833,"No",0,-250],
-  [253,"20/02/2026","BetMGM","Cricket","T20 World Cup","","Total Runs","Travis Head","Under",36.5,"No",250,1.733,"Yes",433.25,183.25],
-  [254,"22/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","Ishan Kishan","Under",27.5,"No",250,1.833,"Yes",458.25,208.25],
-  [255,"22/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Jos Buttler","Over",24.5,"No",250,1.833,"No",0,-250],
-  [256,"22/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","Dasun Shanaka","Under",17.5,"No",250,1.833,"No",0,-250],
-  [257,"23/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Brandon King","Under",23.5,"No",250,1.833,"Yes",458.25,208.25],
-  [258,"23/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Shai Hope","Under",28.5,"No",250,1.833,"Yes",458.25,208.25],
-  [259,"23/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Sherfane Rutherford","Under",19.5,"No",250,1.833,"No",0,-250],
-  [260,"24/02/2026","BetMGM","Cricket","T20 World Cup","","Total Runs","Jos Buttler","Over",24.5,"No",200,2.000,"No",0,-200],
-  [261,"24/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Harry Brook","Under",19.5,"No",250,1.833,"No",0,-250],
-  [262,"24/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Saim Ayub","Under",20.5,"No",250,1.833,"Yes",458.25,208.25],
-  [263,"25/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","Finn Allen","Under",24.5,"No",250,1.833,"Yes",458.25,208.25],
-  [264,"25/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","Kusal Mendis","Under",22.5,"No",250,1.833,"Yes",458.25,208.25],
-  [265,"25/02/2026","Betfred","Cricket","T20 World Cup","","Total Runs","P Rathnayake","Under",18.5,"No",250,1.833,"Yes",458.25,208.25],
-  [266,"26/02/2026","PaddyPower","Cricket","T20 World Cup","","Total Runs","Roston Chase","Under",17.5,"No",250,1.833,"Yes",458.25,208.25],
-  [267,"26/02/2026","BetMGM","Cricket","T20 World Cup","","Total Runs","Ryan Rickelton","Over",23.5,"No",200,2.000,"Yes",400,200],
-  [268,"27/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Finn Allen","Under",23.5,"No",250,1.833,"No",0,-250],
-  [269,"27/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Tom Banton","Under",18.5,"No",250,1.833,"Yes",458.25,208.25],
-  [270,"27/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Rachin Ravindra","Under",20.5,"No",250,1.833,"Yes",458.25,208.25],
-  [271,"27/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Phil Salt","Under",23.5,"No",250,1.833,"Yes",458.25,208.25],
-  [272,"28/02/2026","Bet365","Cricket","T20 World Cup","","Total Runs","Kusal Mendis","Under",23.5,"No",250,1.833,"No",0,-250],
-  [273,"28/02/2026","Bet365","Cricket","T20 World Cup","","Total Runs","P Rathnayake","Under",20.5,"No",250,1.833,"No",0,-250],
-  [274,"28/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Saim Ayub","Under",20.5,"No",250,1.833,"Yes",458.25,208.25],
-  [275,"28/02/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Kamindu Mendis","Under",18.5,"No",250,1.833,"Yes",458.25,208.25],
-  [276,"04/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Aiden Markram","Under",26.5,"No",250,1.833,"Yes",458.25,208.25],
-  [277,"04/03/2026","Bet365","Cricket","T20 World Cup","","Total Runs","Quinton De Kock","Under",24.5,"No",250,1.833,"Yes",458.25,208.25],
-  [278,"05/03/2026","Bet365","Cricket","T20 World Cup","","Total Runs","Abhishek Sharma","Under",26.5,"No",250,1.833,"Yes",458.25,208.25],
-  [279,"05/03/2026","PaddyPower","Cricket","T20 World Cup","","Total Runs","Harry Brook","Under",24.5,"No",250,1.833,"Yes",458.25,208.25],
-  [280,"05/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Ishan Kishan","Under",25.5,"No",250,1.833,"No",0,-250],
-  [281,"05/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Jacob Bethell","Under",19.5,"No",250,1.833,"No",0,-250],
-  [282,"05/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Phil Salt","Under",23.5,"No",250,1.833,"Yes",458.25,208.25],
-  [283,"05/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Tom Banton","Under",17.5,"No",250,1.833,"Yes",458.25,208.25],
-  [284,"08/03/2026","Paddy Power","Cricket","T20 World Cup","","Total Runs","Sanju Samson","Under",27.5,"No",250,1.833,"No",0,-250],
-  [285,"08/03/2026","Paddy Power","Cricket","T20 World Cup","","Total Runs","Glenn Phillips","Under",21.5,"No",250,1.833,"Yes",458.25,208.25],
-  [286,"08/03/2026","Paddy Power","Cricket","T20 World Cup","","Total Runs","Tilak Varma","Under",21.5,"No",250,1.833,"Yes",458.25,208.25],
-  [287,"08/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Abhishek Sharma","Under",26.5,"No",250,1.833,"No",0,-250],
-// Recalculate running P/L
 function recalcRunning() {
   let run = 0;
-  BETS.forEach(b => {
-    if(b.won !== 'Pending') run += b.pl;
-    b.runningPL = run;
-  });
+  BETS.forEach(b => { if(b.won !== 'Pending') run += b.pl; b.runningPL = run; });
 }
 
 function parseDate(d) {
   if(!d) return null;
   const parts = d.split('/');
-  if(parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+  if(parts.length === 3) return new Date(parts[2]+'-'+parts[1]+'-'+parts[0]);
   return new Date(d);
 }
 
+function fmt(n) { return Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function fmtSigned(n) { return (n>=0?'+':'-')+'\u00a3'+fmt(n); }
 
-// ============================================================
-// MEMBERS DATA — populated from Supabase on load
-// ============================================================
-let TRANSACTIONS = [];
+async function loadAllData() {
+  const [betsRes, txRes, membersRes] = await Promise.all([
+    sb.from('bets').select('*').order('seq_id', {ascending:true}),
+    sb.from('transactions').select('*').order('created_at', {ascending:true}),
+    sb.from('members').select('*').order('created_at', {ascending:true}),
+  ]);
+  if(betsRes.error) throw new Error(betsRes.error.message);
+  if(txRes.error) throw new Error(txRes.error.message);
+  if(membersRes.error) throw new Error(membersRes.error.message);
 
+  BETS = betsRes.data.map(row => { const b={...row.data,_sbId:row.id}; b.dateObj=parseDate(b.date); return b; });
+  nextId = BETS.length > 0 ? Math.max(...BETS.map(b=>b.id)) + 1 : 1;
+  recalcRunning();
 
-let MEMBER_COLORS = {};
-let MEMBER_NAMES = {};
+  MEMBER_COLORS = {}; MEMBER_NAMES = {};
+  membersRes.data.forEach((row,i) => {
+    const m=row.data;
+    MEMBER_NAMES[m.initials]=m.name||m.initials;
+    MEMBER_COLORS[m.initials]=m.color||DEFAULT_COLORS[i%DEFAULT_COLORS.length];
+  });
+  TRANSACTIONS = txRes.data.map(row => ({...row.data, _sbId:row.id}));
+}
 
+async function sbAddBet(bet) {
+  const {data,error} = await sb.from('bets').insert({data:bet,seq_id:bet.id}).select().single();
+  if(error) throw error;
+  bet._sbId = data.id;
+}
+async function sbUpdateBet(bet) {
+  if(!bet._sbId) return;
+  const {error} = await sb.from('bets').update({data:bet}).eq('id',bet._sbId);
+  if(error) throw error;
+}
+async function sbAddTransaction(tx) {
+  const {data,error} = await sb.from('transactions').insert({data:tx}).select().single();
+  if(error) throw error;
+  tx._sbId = data.id;
+}
+async function sbEnsureMember(initials,name,color) {
+  const {error} = await sb.from('members').upsert({key:initials,data:{initials,name,color}},{onConflict:'key'});
+  if(error) console.warn(error);
+}
 
-// ============================================================
+function subscribeRealtime() {
+  sb.channel('syndicate-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'bets'}, async()=>{ await reloadAndRefresh(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'transactions'}, async()=>{ await reloadAndRefresh(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'members'}, async()=>{ await reloadAndRefresh(); })
+    .subscribe();
+}
+
+let _refreshing=false;
+async function reloadAndRefresh() {
+  if(_refreshing) return; _refreshing=true;
+  try { await loadAllData(); refreshAll(); populateFilters(); }
+  catch(e) { console.error(e); }
+  finally { _refreshing=false; }
+}
+
+function setLoadingText(msg){const el=document.getElementById('loadingText');if(el)el.textContent=msg;}
+function hideLoading(){const el=document.getElementById('loadingOverlay');if(el)el.style.display='none';}
+function showLoadingError(msg){
+  const e=document.getElementById('loadingError');
+  const s=document.querySelector('.loading-spinner');
+  const t=document.getElementById('loadingText');
+  if(e){e.textContent=msg;e.style.display='block';}
+  if(s)s.style.display='none';
+  if(t)t.style.display='none';
+}
+
 // MEMBER CALCULATIONS
-// ============================================================
 function getMemberStats() {
   const members = {};
-
   TRANSACTIONS.forEach(tx => {
-    const k = tx.initials;
-    if(!members[k]) members[k] = { initials:k, name: MEMBER_NAMES[k]||k, units:0, deposited:0, withdrawn:0, txCount:0 };
-    members[k].units += tx.units;
-    members[k].txCount++;
-    if(tx.action === 'Deposit') members[k].deposited += tx.amount;
-    if(tx.action === 'Withdrawal') members[k].withdrawn += tx.amount;
+    const k=tx.initials;
+    if(!members[k]) members[k]={initials:k,name:MEMBER_NAMES[k]||k,units:0,deposited:0,withdrawn:0,txCount:0};
+    members[k].units+=tx.units; members[k].txCount++;
+    if(tx.action==='Deposit') members[k].deposited+=tx.amount;
+    if(tx.action==='Withdrawal') members[k].withdrawn+=tx.amount;
   });
-
-  // Current fund value = total deposited + total P/L from bets
-  const settledBets = BETS.filter(b => b.won !== 'Pending');
-  const totalPL = settledBets.reduce((s,b) => s+b.pl, 0);
-  const totalDeposited = TRANSACTIONS.filter(t=>t.action==='Deposit').reduce((s,t)=>s+t.amount,0);
-  const totalWithdrawn = TRANSACTIONS.filter(t=>t.action==='Withdrawal').reduce((s,t)=>s+t.amount,0);
-  const fundValue = totalDeposited - totalWithdrawn + totalPL;
-
-  const totalUnits = Object.values(members).reduce((s,m)=>s+m.units,0);
-  const unitPrice = totalUnits > 0 ? fundValue / totalUnits : 1;
-
-  Object.values(members).forEach(m => {
-    m.currentValue = m.units * unitPrice;
-    m.netDeposited = m.deposited - m.withdrawn;
-    m.unrealisedPL = m.currentValue - m.netDeposited;
-    m.unrealisedPLPct = m.netDeposited > 0 ? (m.unrealisedPL / m.netDeposited * 100) : 0;
-    m.sharePercent = totalUnits > 0 ? (m.units / totalUnits * 100) : 0;
-    m.unitPrice = unitPrice;
-    m.color = MEMBER_COLORS[m.initials] || '#00e5ff';
+  const settledBets=BETS.filter(b=>b.won!=='Pending');
+  const totalPL=settledBets.reduce((s,b)=>s+b.pl,0);
+  const totalDeposited=TRANSACTIONS.filter(t=>t.action==='Deposit').reduce((s,t)=>s+t.amount,0);
+  const totalWithdrawn=TRANSACTIONS.filter(t=>t.action==='Withdrawal').reduce((s,t)=>s+t.amount,0);
+  const fundValue=totalDeposited-totalWithdrawn+totalPL;
+  const totalUnits=Object.values(members).reduce((s,m)=>s+m.units,0);
+  const unitPrice=totalUnits>0?fundValue/totalUnits:1;
+  Object.values(members).forEach(m=>{
+    m.currentValue=m.units*unitPrice;
+    m.netDeposited=m.deposited-m.withdrawn;
+    m.unrealisedPL=m.currentValue-m.netDeposited;
+    m.unrealisedPLPct=m.netDeposited>0?(m.unrealisedPL/m.netDeposited*100):0;
+    m.sharePercent=totalUnits>0?(m.units/totalUnits*100):0;
+    m.unitPrice=unitPrice;
+    m.color=MEMBER_COLORS[m.initials]||'#00e5ff';
   });
-
-  return { members, totalUnits, unitPrice, fundValue, totalDeposited, totalWithdrawn, totalPL };
+  return {members,totalUnits,unitPrice,fundValue,totalDeposited,totalWithdrawn,totalPL};
 }
 
 // ============================================================
@@ -1162,117 +923,6 @@ function sortTable(key) {
 }
 
 // ============================================================
-// SUPABASE DATA LAYER
-// ============================================================
-const DEFAULT_MEMBER_COLORS = ['#00e5ff','#00ff87','#ffd166','#ff6b35','#a855f7','#f43f5e','#10b981','#06b6d4','#8b5cf6','#ec4899','#14b8a6','#f97316'];
-
-async function loadAllData() {
-  setLoadingText('Loading bets…');
-  const [betsRes, txRes, membersRes] = await Promise.all([
-    sb.from('bets').select('*').order('seq_id', {ascending:true}),
-    sb.from('transactions').select('*').order('created_at', {ascending:true}),
-    sb.from('members').select('*').order('created_at', {ascending:true}),
-  ]);
-
-  if(betsRes.error || txRes.error || membersRes.error) {
-    throw new Error((betsRes.error || txRes.error || membersRes.error).message);
-  }
-
-  // Load bets
-  BETS = betsRes.data.map(row => {
-    const b = { ...row.data, _sbId: row.id };
-    b.dateObj = parseDate(b.date);
-    return b;
-  });
-  nextId = BETS.length > 0 ? Math.max(...BETS.map(b=>b.id)) + 1 : 1;
-  recalcRunning();
-
-  // Load members config
-  MEMBER_COLORS = {};
-  MEMBER_NAMES = {};
-  membersRes.data.forEach((row, i) => {
-    const m = row.data;
-    MEMBER_NAMES[m.initials] = m.name || m.initials;
-    MEMBER_COLORS[m.initials] = m.color || DEFAULT_MEMBER_COLORS[i % DEFAULT_MEMBER_COLORS.length];
-  });
-
-  // Load transactions
-  TRANSACTIONS = txRes.data.map(row => ({ ...row.data, _sbId: row.id }));
-}
-
-async function sbAddBet(bet) {
-  const { data, error } = await sb.from('bets').insert({ data: bet, seq_id: bet.id }).select().single();
-  if(error) throw error;
-  bet._sbId = data.id;
-}
-
-async function sbUpdateBet(bet) {
-  if(!bet._sbId) return;
-  const { error } = await sb.from('bets').update({ data: bet }).eq('id', bet._sbId);
-  if(error) throw error;
-}
-
-async function sbAddTransaction(tx) {
-  const { data, error } = await sb.from('transactions').insert({ data: tx }).select().single();
-  if(error) throw error;
-  tx._sbId = data.id;
-}
-
-async function sbEnsureMember(initials, name, color) {
-  // Upsert member config row
-  const { error } = await sb.from('members').upsert({ key: initials, data: { initials, name, color } }, { onConflict: 'key' });
-  if(error) console.warn('member upsert error:', error);
-}
-
-function subscribeRealtime() {
-  sb.channel('syndicate-live')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'bets' }, async () => {
-      await reloadAndRefresh();
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, async () => {
-      await reloadAndRefresh();
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, async () => {
-      await reloadAndRefresh();
-    })
-    .subscribe();
-}
-
-let _refreshing = false;
-async function reloadAndRefresh() {
-  if(_refreshing) return;
-  _refreshing = true;
-  try {
-    await loadAllData();
-    refreshAll();
-    populateFilters();
-  } catch(e) {
-    console.error('Reload error:', e);
-  } finally {
-    _refreshing = false;
-  }
-}
-
-function setLoadingText(msg) {
-  const el = document.getElementById('loadingText');
-  if(el) el.textContent = msg;
-}
-
-function hideLoading() {
-  const el = document.getElementById('loadingOverlay');
-  if(el) el.style.display = 'none';
-}
-
-function showLoadingError(msg) {
-  const errEl = document.getElementById('loadingError');
-  const spinnerEl = document.querySelector('.loading-spinner');
-  const textEl = document.getElementById('loadingText');
-  if(errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
-  if(spinnerEl) spinnerEl.style.display = 'none';
-  if(textEl) textEl.style.display = 'none';
-}
-
-// ============================================================
 // ADD BET
 // ============================================================
 function openAddBet() {
@@ -1307,14 +957,8 @@ async function submitNewBet() {
   recalcRunning();
   closeModal('addBetModal');
   refreshAll();
-  showToast(`Bet #${bet.id} added — saving…`);
-  try {
-    await sbAddBet(bet);
-    showToast(`Bet #${bet.id} saved ✓`);
-  } catch(e) {
-    showToast('Save failed — check connection','error');
-    console.error(e);
-  }
+  showToast(`Bet #${bet.id} added - saving...`);
+  try { await sbAddBet(bet); showToast(`Bet #${bet.id} saved`); } catch(e) { showToast('Save failed','error'); console.error(e); }
   // Clear form
   ['nb_bookmaker','nb_tournament','nb_fixture','nb_market','nb_player','nb_line','nb_stake','nb_odds'].forEach(id=>document.getElementById(id).value='');
 }
@@ -1344,8 +988,8 @@ function saveEditBet() {
   recalcRunning();
   closeModal('editBetModal');
   refreshAll();
-  showToast('Bet result updated — saving…');
-  sbUpdateBet(b).then(()=>showToast('Saved ✓')).catch(e=>{showToast('Save failed — check connection','error');console.error(e);});
+  showToast('Saving...');
+  sbUpdateBet(b).then(()=>showToast('Bet updated')).catch(e=>{showToast('Save failed','error');console.error(e);});
 }
 
 // ============================================================
@@ -1486,9 +1130,9 @@ function confirmTransaction() {
   closeModal('txModal');
   buildMembersPage();
   buildKPIs();
-  showToast(`${txAction} of £${amount.toFixed(0)} recorded — saving…`);
-  const newTx = TRANSACTIONS[TRANSACTIONS.length-1];
-  sbAddTransaction(newTx).then(()=>showToast('Saved ✓')).catch(e=>{showToast('Save failed — check connection','error');console.error(e);});
+  const _tx=TRANSACTIONS[TRANSACTIONS.length-1];
+  showToast('Saving...');
+  sbAddTransaction(_tx).then(()=>showToast('Transaction saved')).catch(e=>{showToast('Save failed','error');console.error(e);});
 }
 
 // ============================================================
@@ -1516,17 +1160,14 @@ function addNewMember() {
   const units=deposit/unitPrice;
   const today=new Date();
   const dd=String(today.getDate()).padStart(2,'0'),mm=String(today.getMonth()+1).padStart(2,'0'),yyyy=today.getFullYear();
-  const newTx = {date:`${dd}/${mm}/${yyyy}`,member:initials,initials,action:'Deposit',amount:deposit,unitPrice,units,note:'New member — Initial Contribution'};
-  TRANSACTIONS.push(newTx);
+  TRANSACTIONS.push({date:`${dd}/${mm}/${yyyy}`,member:initials,initials,action:'Deposit',amount:deposit,unitPrice,units,note:'New member — Initial Contribution'});
 
   closeModal('addMemberModal');
   buildMembersPage();
   buildKPIs();
-  showToast(`${initials} added — saving…`);
-  Promise.all([
-    sbEnsureMember(initials, name||initials, MEMBER_COLORS[initials]),
-    sbAddTransaction(newTx)
-  ]).then(()=>showToast(`${initials} saved ✓`)).catch(e=>{showToast('Save failed — check connection','error');console.error(e);});
+  const _mtx=TRANSACTIONS[TRANSACTIONS.length-1];
+  showToast('Saving...');
+  Promise.all([sbEnsureMember(initials,name||initials,MEMBER_COLORS[initials]),sbAddTransaction(_mtx)]).then(()=>showToast(`${initials} saved`)).catch(e=>{showToast('Save failed','error');console.error(e);});
 }
 
 // ============================================================
@@ -1823,37 +1464,15 @@ function initDashboard() {
   renderTable();
 }
 
-// ── Bootstrap: load from Supabase, then check auth ──────────
 (async () => {
-  // Validate Supabase config
-  if(SUPABASE_URL.includes('YOUR_PROJECT_ID') || SUPABASE_KEY.includes('YOUR_ANON')) {
-    showLoadingError(
-      '⚠ Supabase not configured yet.\n\n' +
-      'Open index.html and replace SUPABASE_URL and SUPABASE_KEY ' +
-      'with your project credentials from supabase.com.\n\n' +
-      'See the setup instructions for details.'
-    );
-    return;
-  }
-
   try {
-    setLoadingText('Connecting to database…');
     await loadAllData();
-    setLoadingText('Ready');
     subscribeRealtime();
   } catch(e) {
-    showLoadingError(
-      '⚠ Could not connect to database.\n\n' +
-      'Error: ' + e.message + '\n\n' +
-      'Check your Supabase URL and API key, and make sure the ' +
-      'required tables (bets, transactions, members) exist.'
-    );
+    showLoadingError('Could not connect to database.\nError: ' + e.message);
     return;
   }
-
   hideLoading();
-
-  // Check if already authenticated this session
   const savedRole = sessionStorage.getItem('syndicateAuth');
   if(savedRole === 'admin' || savedRole === 'viewer') {
     document.getElementById('lockScreen').style.display='none';
@@ -1861,8 +1480,6 @@ function initDashboard() {
     initDashboard();
     applyRole(savedRole);
   }
-
-  // Allow Enter key on lock screen
   document.getElementById('lockInput').focus();
 })();
 </script>
