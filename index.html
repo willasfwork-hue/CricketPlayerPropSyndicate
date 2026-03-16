@@ -1281,7 +1281,7 @@ function openAddBet() {
   document.getElementById('addBetModal').classList.add('open');
 }
 
-function submitNewBet() {
+async function submitNewBet() {
   const dateRaw=document.getElementById('nb_date').value;
   const bookmaker=document.getElementById('nb_bookmaker').value.trim();
   const sport=document.getElementById('nb_sport').value;
