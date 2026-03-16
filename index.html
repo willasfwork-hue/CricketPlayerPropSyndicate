@@ -6,6 +6,7 @@
 <title>Syndicate</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #080c10;
@@ -210,7 +211,22 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 .lock-btn:hover { background:#00c8e0; }
 .lock-error { color:var(--red); font-family:'DM Mono',monospace; font-size:0.7rem; margin-top:12px; height:18px; letter-spacing:1px; }
 
-/* WEEKLY REPORT MODAL */
+#loadingOverlay {
+  position:fixed; inset:0; z-index:99999;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px;
+}
+#loadingOverlay::before {
+  content:''; position:fixed; inset:0;
+  background-image:linear-gradient(rgba(0,229,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.015) 1px,transparent 1px);
+  background-size:40px 40px; pointer-events:none;
+}
+.loading-logo { font-family:'Bebas Neue',sans-serif; font-size:2.4rem; letter-spacing:8px; background:linear-gradient(135deg,var(--accent),var(--green)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; position:relative; z-index:1; }
+.loading-spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; position:relative; z-index:1; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:3px; color:var(--muted); text-transform:uppercase; position:relative; z-index:1; }
+.loading-error { font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--red); text-align:center; max-width:400px; line-height:1.6; position:relative; z-index:1; padding:0 20px; }
+
 #weeklyModal .modal { width:680px; max-width:96vw; }
 .report-tabs { display:flex; gap:2px; margin-bottom:20px; border-bottom:1px solid var(--border); }
 .report-tab { padding:9px 20px; background:none; border:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:1.5px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; text-transform:uppercase; }
@@ -228,6 +244,14 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 </style>
 </head>
 <body>
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay">
+  <div class="loading-logo">Syndicate</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Connecting to database…</div>
+  <div class="loading-error" id="loadingError" style="display:none"></div>
+</div>
+
 <!-- LOCK SCREEN -->
 <div id="lockScreen">
   <div class="lock-box">
@@ -587,10 +611,19 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 
 <script>
 // ============================================================
-// BET DATA
+// SUPABASE CONFIG — replace with your own project details
 // ============================================================
-const INITIAL_BETS = [
-  [1,"06/11/2025","Boylesport","Cricket","iT20","Australia v India","Total Runs","Josh Phillippe","Under",16.5,"No",100,1.833,"Yes",183.30,83.30],
+const SUPABASE_URL = 'https://kpnxsxedmrqjsnhztrtm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwbnhzeGVkbXJxanNuaHp0cnRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzY2OTYsImV4cCI6MjA4OTI1MjY5Nn0.2qlYZ2ePHZ8zoSWrX1hZteT8bPmJWp9WnCRAR1WmPV8';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================================
+// BET DATA — populated from Supabase on load
+// ============================================================
+let BETS = [];
+let nextId = 1;
+
+
   [2,"06/11/2025","Bet365","Cricket","iT20","West Indies v New Zealand","Match Total","N/A","Over",333.5,"No",150,1.833,"Yes",274.95,124.95],
   [3,"06/11/2025","William Hill","Cricket","iT20","Australia v India","Total Runs","Suryakumar Yadav","Under",25.5,"No",100,1.833,"Yes",183.30,83.30],
   [4,"06/11/2025","William Hill","Cricket","iT20","Australia v India","Total Runs","Glenn Maxwell","Under",17.5,"No",100,1.833,"Yes",183.30,83.30],
@@ -877,13 +910,6 @@ const INITIAL_BETS = [
   [285,"08/03/2026","Paddy Power","Cricket","T20 World Cup","","Total Runs","Glenn Phillips","Under",21.5,"No",250,1.833,"Yes",458.25,208.25],
   [286,"08/03/2026","Paddy Power","Cricket","T20 World Cup","","Total Runs","Tilak Varma","Under",21.5,"No",250,1.833,"Yes",458.25,208.25],
   [287,"08/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Abhishek Sharma","Under",26.5,"No",250,1.833,"No",0,-250],
-  [288,"08/03/2026","William Hill","Cricket","T20 World Cup","","Total Runs","Ishan Kishan","Under",26.5,"No",250,1.833,"No",0,-250],
-];
-
-const FIELDS = ['id','date','bookmaker','sport','tournament','fixture','market','player','selection','line','inplay','stake','odds','won','payout','pl'];
-let BETS = INITIAL_BETS.map(r => { const o={}; FIELDS.forEach((f,i)=>o[f]=r[i]); return o; });
-let nextId = 289;
-
 // Recalculate running P/L
 function recalcRunning() {
   let run = 0;
@@ -892,7 +918,6 @@ function recalcRunning() {
     b.runningPL = run;
   });
 }
-recalcRunning();
 
 function parseDate(d) {
   if(!d) return null;
@@ -900,36 +925,17 @@ function parseDate(d) {
   if(parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
   return new Date(d);
 }
-BETS.forEach(b => { b.dateObj = parseDate(b.date); });
+
 
 // ============================================================
-// MEMBERS DATA
+// MEMBERS DATA — populated from Supabase on load
 // ============================================================
-// Current unit price = totalFundValue / totalUnits
-// Fund value = total deposited + total P/L
-// Transactions from the CSV
-let TRANSACTIONS = [
-  {date:"05/11/2025", member:"PM", initials:"PM", action:"Deposit", amount:1000, unitPrice:1, units:1000, note:"Initial Contribution"},
-  {date:"05/11/2025", member:"SB", initials:"SB", action:"Deposit", amount:1000, unitPrice:1, units:1000, note:"Initial Contribution"},
-  {date:"06/11/2025", member:"EW", initials:"EW", action:"Deposit", amount:500, unitPrice:1.187425, units:421.0792261, note:"Joined Later"},
-  {date:"17/11/2025", member:"PM", initials:"PM", action:"Deposit", amount:500, unitPrice:1.17639686, units:425.0266359, note:"Increased Contribution"},
-  {date:"22/01/2026", member:"AS", initials:"AS", action:"Deposit", amount:500, unitPrice:3.426093572, units:145.9388045, note:"Joined Later"},
-  {date:"30/01/2026", member:"AM", initials:"AM", action:"Deposit", amount:750, unitPrice:3.241069597, units:231.4050895, note:"Joined Later"},
-  {date:"07/02/2026", member:"JL", initials:"JL", action:"Deposit", amount:500, unitPrice:3.041857557, units:164.3706, note:"Initial Contribution"},
-  {date:"11/02/2026", member:"EW", initials:"EW", action:"Withdrawal", amount:500, unitPrice:3.196660652, units:-156.4132244, note:"Withdrawal"},
-  {date:"27/02/2026", member:"DF", initials:"DF", action:"Deposit", amount:500, unitPrice:3.302286236, units:151.4102547, note:"Joined Later"},
-];
+let TRANSACTIONS = [];
 
-// JL units were blank — calculate: 500 / 3.041857557
-TRANSACTIONS[6].units = 500 / 3.041857557;
 
-const MEMBER_COLORS = {
-  PM:'#00e5ff', SB:'#00ff87', EW:'#ffd166', AS:'#ff6b35',
-  AM:'#a855f7', JL:'#f43f5e', DF:'#10b981'
-};
-const MEMBER_NAMES = {
-  PM:'PM', SB:'SB', EW:'EW', AS:'AS', AM:'AM', JL:'JL', DF:'DF'
-};
+let MEMBER_COLORS = {};
+let MEMBER_NAMES = {};
+
 
 // ============================================================
 // MEMBER CALCULATIONS
@@ -1156,6 +1162,117 @@ function sortTable(key) {
 }
 
 // ============================================================
+// SUPABASE DATA LAYER
+// ============================================================
+const DEFAULT_MEMBER_COLORS = ['#00e5ff','#00ff87','#ffd166','#ff6b35','#a855f7','#f43f5e','#10b981','#06b6d4','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+
+async function loadAllData() {
+  setLoadingText('Loading bets…');
+  const [betsRes, txRes, membersRes] = await Promise.all([
+    sb.from('bets').select('*').order('seq_id', {ascending:true}),
+    sb.from('transactions').select('*').order('created_at', {ascending:true}),
+    sb.from('members').select('*').order('created_at', {ascending:true}),
+  ]);
+
+  if(betsRes.error || txRes.error || membersRes.error) {
+    throw new Error((betsRes.error || txRes.error || membersRes.error).message);
+  }
+
+  // Load bets
+  BETS = betsRes.data.map(row => {
+    const b = { ...row.data, _sbId: row.id };
+    b.dateObj = parseDate(b.date);
+    return b;
+  });
+  nextId = BETS.length > 0 ? Math.max(...BETS.map(b=>b.id)) + 1 : 1;
+  recalcRunning();
+
+  // Load members config
+  MEMBER_COLORS = {};
+  MEMBER_NAMES = {};
+  membersRes.data.forEach((row, i) => {
+    const m = row.data;
+    MEMBER_NAMES[m.initials] = m.name || m.initials;
+    MEMBER_COLORS[m.initials] = m.color || DEFAULT_MEMBER_COLORS[i % DEFAULT_MEMBER_COLORS.length];
+  });
+
+  // Load transactions
+  TRANSACTIONS = txRes.data.map(row => ({ ...row.data, _sbId: row.id }));
+}
+
+async function sbAddBet(bet) {
+  const { data, error } = await sb.from('bets').insert({ data: bet, seq_id: bet.id }).select().single();
+  if(error) throw error;
+  bet._sbId = data.id;
+}
+
+async function sbUpdateBet(bet) {
+  if(!bet._sbId) return;
+  const { error } = await sb.from('bets').update({ data: bet }).eq('id', bet._sbId);
+  if(error) throw error;
+}
+
+async function sbAddTransaction(tx) {
+  const { data, error } = await sb.from('transactions').insert({ data: tx }).select().single();
+  if(error) throw error;
+  tx._sbId = data.id;
+}
+
+async function sbEnsureMember(initials, name, color) {
+  // Upsert member config row
+  const { error } = await sb.from('members').upsert({ key: initials, data: { initials, name, color } }, { onConflict: 'key' });
+  if(error) console.warn('member upsert error:', error);
+}
+
+function subscribeRealtime() {
+  sb.channel('syndicate-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'bets' }, async () => {
+      await reloadAndRefresh();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, async () => {
+      await reloadAndRefresh();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, async () => {
+      await reloadAndRefresh();
+    })
+    .subscribe();
+}
+
+let _refreshing = false;
+async function reloadAndRefresh() {
+  if(_refreshing) return;
+  _refreshing = true;
+  try {
+    await loadAllData();
+    refreshAll();
+    populateFilters();
+  } catch(e) {
+    console.error('Reload error:', e);
+  } finally {
+    _refreshing = false;
+  }
+}
+
+function setLoadingText(msg) {
+  const el = document.getElementById('loadingText');
+  if(el) el.textContent = msg;
+}
+
+function hideLoading() {
+  const el = document.getElementById('loadingOverlay');
+  if(el) el.style.display = 'none';
+}
+
+function showLoadingError(msg) {
+  const errEl = document.getElementById('loadingError');
+  const spinnerEl = document.querySelector('.loading-spinner');
+  const textEl = document.getElementById('loadingText');
+  if(errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  if(spinnerEl) spinnerEl.style.display = 'none';
+  if(textEl) textEl.style.display = 'none';
+}
+
+// ============================================================
 // ADD BET
 // ============================================================
 function openAddBet() {
@@ -1190,7 +1307,14 @@ function submitNewBet() {
   recalcRunning();
   closeModal('addBetModal');
   refreshAll();
-  showToast(`Bet #${bet.id} added successfully`);
+  showToast(`Bet #${bet.id} added — saving…`);
+  try {
+    await sbAddBet(bet);
+    showToast(`Bet #${bet.id} saved ✓`);
+  } catch(e) {
+    showToast('Save failed — check connection','error');
+    console.error(e);
+  }
   // Clear form
   ['nb_bookmaker','nb_tournament','nb_fixture','nb_market','nb_player','nb_line','nb_stake','nb_odds'].forEach(id=>document.getElementById(id).value='');
 }
@@ -1220,7 +1344,8 @@ function saveEditBet() {
   recalcRunning();
   closeModal('editBetModal');
   refreshAll();
-  showToast('Bet result updated');
+  showToast('Bet result updated — saving…');
+  sbUpdateBet(b).then(()=>showToast('Saved ✓')).catch(e=>{showToast('Save failed — check connection','error');console.error(e);});
 }
 
 // ============================================================
@@ -1361,7 +1486,9 @@ function confirmTransaction() {
   closeModal('txModal');
   buildMembersPage();
   buildKPIs();
-  showToast(`${txAction} of £${amount.toFixed(0)} recorded for ${txMemberInitials}`);
+  showToast(`${txAction} of £${amount.toFixed(0)} recorded — saving…`);
+  const newTx = TRANSACTIONS[TRANSACTIONS.length-1];
+  sbAddTransaction(newTx).then(()=>showToast('Saved ✓')).catch(e=>{showToast('Save failed — check connection','error');console.error(e);});
 }
 
 // ============================================================
@@ -1389,12 +1516,17 @@ function addNewMember() {
   const units=deposit/unitPrice;
   const today=new Date();
   const dd=String(today.getDate()).padStart(2,'0'),mm=String(today.getMonth()+1).padStart(2,'0'),yyyy=today.getFullYear();
-  TRANSACTIONS.push({date:`${dd}/${mm}/${yyyy}`,member:initials,initials,action:'Deposit',amount:deposit,unitPrice,units,note:'New member — Initial Contribution'});
+  const newTx = {date:`${dd}/${mm}/${yyyy}`,member:initials,initials,action:'Deposit',amount:deposit,unitPrice,units,note:'New member — Initial Contribution'};
+  TRANSACTIONS.push(newTx);
 
   closeModal('addMemberModal');
   buildMembersPage();
   buildKPIs();
-  showToast(`${initials} added as new member`);
+  showToast(`${initials} added — saving…`);
+  Promise.all([
+    sbEnsureMember(initials, name||initials, MEMBER_COLORS[initials]),
+    sbAddTransaction(newTx)
+  ]).then(()=>showToast(`${initials} saved ✓`)).catch(e=>{showToast('Save failed — check connection','error');console.error(e);});
 }
 
 // ============================================================
@@ -1691,17 +1823,48 @@ function initDashboard() {
   renderTable();
 }
 
-// Check if already authenticated this session
-const savedRole = sessionStorage.getItem('syndicateAuth');
-if(savedRole === 'admin' || savedRole === 'viewer') {
-  document.getElementById('lockScreen').style.display='none';
-  document.getElementById('mainApp').style.display='block';
-  initDashboard();
-  applyRole(savedRole);
-}
+// ── Bootstrap: load from Supabase, then check auth ──────────
+(async () => {
+  // Validate Supabase config
+  if(SUPABASE_URL.includes('YOUR_PROJECT_ID') || SUPABASE_KEY.includes('YOUR_ANON')) {
+    showLoadingError(
+      '⚠ Supabase not configured yet.\n\n' +
+      'Open index.html and replace SUPABASE_URL and SUPABASE_KEY ' +
+      'with your project credentials from supabase.com.\n\n' +
+      'See the setup instructions for details.'
+    );
+    return;
+  }
 
-// Allow Enter key on lock screen
-document.getElementById('lockInput').focus();
+  try {
+    setLoadingText('Connecting to database…');
+    await loadAllData();
+    setLoadingText('Ready');
+    subscribeRealtime();
+  } catch(e) {
+    showLoadingError(
+      '⚠ Could not connect to database.\n\n' +
+      'Error: ' + e.message + '\n\n' +
+      'Check your Supabase URL and API key, and make sure the ' +
+      'required tables (bets, transactions, members) exist.'
+    );
+    return;
+  }
+
+  hideLoading();
+
+  // Check if already authenticated this session
+  const savedRole = sessionStorage.getItem('syndicateAuth');
+  if(savedRole === 'admin' || savedRole === 'viewer') {
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('mainApp').style.display='block';
+    initDashboard();
+    applyRole(savedRole);
+  }
+
+  // Allow Enter key on lock screen
+  document.getElementById('lockInput').focus();
+})();
 </script>
 </body>
 </html>
