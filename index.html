@@ -242,6 +242,24 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 }
 .email-preview::-webkit-scrollbar { width:4px; }
 .email-preview::-webkit-scrollbar-thumb { background:var(--border); }
+
+/* OPEN BETS MODAL */
+#openBetsModal .modal { width:700px; max-width:96vw; }
+.open-bets-preview {
+  background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+  padding:20px; font-family:'DM Mono',monospace; font-size:0.72rem; line-height:1.9;
+  color:var(--text); white-space:pre-wrap; max-height:420px; overflow-y:auto;
+  margin-bottom:16px;
+}
+.open-bets-preview::-webkit-scrollbar { width:4px; }
+.open-bets-preview::-webkit-scrollbar-thumb { background:var(--border); }
+.open-bets-count-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(0,229,255,0.12); border:1px solid rgba(0,229,255,0.3);
+  color:var(--accent); padding:3px 10px; border-radius:4px;
+  font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:1.5px;
+  margin-left:8px; vertical-align:middle;
+}
 </style>
 </head>
 <body>
@@ -332,6 +350,10 @@ tbody td { padding:9px 12px; white-space:nowrap; }
   <div class="filters">
     <button class="add-bet-btn admin-only" onclick="openAddBet()">+ Add Bet</button>
     <button class="add-bet-btn admin-only" onclick="exportCSV()" style="background:var(--green)">⬇ Export CSV</button>
+    <!-- OPEN BETS BUTTON — admin only -->
+    <button class="add-bet-btn admin-only" id="openBetsBtn" onclick="openOpenBetsModal()" style="background:var(--gold);color:#000;">
+      📲 Open Bets <span id="openBetsBadge" class="open-bets-count-badge" style="background:rgba(0,0,0,0.2);border-color:rgba(0,0,0,0.3);color:#000">0</span>
+    </button>
     <span class="filter-label" style="margin-left:8px">FILTER:</span>
     <input class="search-input" id="searchInput" placeholder="Search player, fixture..." oninput="renderTable()">
     <select class="filter-select" id="filterSport" onchange="renderTable()"><option value="">All Sports</option></select>
@@ -670,6 +692,30 @@ tbody td { padding:9px 12px; white-space:nowrap; }
   </div>
 </div>
 
+<!-- ======= OPEN BETS MODAL ======= -->
+<div class="modal-overlay" id="openBetsModal">
+  <div class="modal" style="width:700px;max-width:96vw">
+    <button class="modal-close" onclick="closeModal('openBetsModal')">✕</button>
+    <div class="modal-title">📲 Open Bets — WhatsApp Draft</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted)">PENDING BETS:</div>
+      <span id="openBetsModalCount" style="font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--accent);font-weight:600">0</span>
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);margin-left:auto">TOTAL STAKE:</div>
+      <span id="openBetsModalStake" style="font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--gold);font-weight:600">£0</span>
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted)">POTENTIAL RETURN:</div>
+      <span id="openBetsModalReturn" style="font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--green);font-weight:600">£0</span>
+    </div>
+    <div class="open-bets-preview" id="openBetsContent"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="copyOpenBets()">📋 Copy Text</button>
+      <button class="btn btn-green" onclick="sendWhatsApp()" style="display:flex;align-items:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Send via WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
 </div><!-- end mainApp -->
 
 <!-- TOAST -->
@@ -829,6 +875,11 @@ function buildKPIs() {
   </div>`).join('');
 
   document.getElementById('betCount').textContent = `${BETS.length} BETS LOADED`;
+
+  // Update open bets badge count
+  const openCount = BETS.filter(b=>b.won==='Pending').length;
+  const badge = document.getElementById('openBetsBadge');
+  if(badge) badge.textContent = openCount;
 }
 
 function fmt(n) { return Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
@@ -1024,7 +1075,6 @@ async function submitNewBet() {
   refreshAll();
   showToast(`Bet #${bet.id} added - saving...`);
   try { await sbAddBet(bet); showToast(`Bet #${bet.id} saved`); } catch(e) { showToast('Save failed','error'); console.error(e); }
-  // Clear form
   ['nb_bookmaker','nb_tournament','nb_fixture','nb_market','nb_player','nb_line','nb_stake','nb_odds'].forEach(id=>document.getElementById(id).value='');
 }
 
@@ -1036,7 +1086,6 @@ function openEditBet(id) {
   const b=BETS.find(x=>x.id===id);
   if(!b)return;
   editBetId=id;
-  // Populate all fields
   if(b.date) {
     const parts=b.date.split('/');
     if(parts.length===3) document.getElementById('eb_date').value=`${parts[2]}-${parts[1]}-${parts[0]}`;
@@ -1058,7 +1107,6 @@ function openEditBet(id) {
 function saveEditBet() {
   const b=BETS.find(x=>x.id===editBetId);
   if(!b)return;
-  // Read all fields
   const dateRaw=document.getElementById('eb_date').value;
   if(dateRaw){const d=new Date(dateRaw);const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),yyyy=d.getFullYear();b.date=`${dd}/${mm}/${yyyy}`;b.dateObj=d;}
   b.bookmaker=document.getElementById('eb_bookmaker').value.trim();
@@ -1155,7 +1203,6 @@ function buildMembersPage() {
   const {members, unitPrice, fundValue, totalDeposited, totalWithdrawn, totalPL} = getMemberStats();
   const memberArr = Object.values(members).sort((a,b)=>b.currentValue-a.currentValue);
   const totalUnits = memberArr.reduce((s,m)=>s+m.units,0);
-  // KPIs
   document.getElementById('memberKpiRow').innerHTML = [
     {label:'Fund NAV', value:`£${fmt(fundValue)}`, cls:'green', color:'green', sub:'Total fund value'},
     {label:'Unit Price', value:`£${unitPrice.toFixed(4)}`, cls:'blue', color:'blue', sub:'NAV per unit'},
@@ -1163,7 +1210,6 @@ function buildMembersPage() {
     {label:'Members', value:memberArr.length, cls:'purple', color:'blue', sub:'Active investors'},
   ].map(k=>`<div class="kpi ${k.cls}"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.color}">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
 
-  // Member cards
   document.getElementById('memberGrid').innerHTML = memberArr.map(m=>`
     <div class="member-card">
       <div class="member-initial" style="background:${m.color}22;color:${m.color};border:1px solid ${m.color}44">${m.initials}</div>
@@ -1193,7 +1239,6 @@ function buildMembersPage() {
       </div>
     </div>`).join('');
 
-  // Ledger
   const sorted=[...TRANSACTIONS].sort((a,b)=>parseDate(b.date)-parseDate(a.date));
   document.getElementById('ledgerBody').innerHTML=sorted.map(tx=>`
     <tr>
@@ -1206,7 +1251,6 @@ function buildMembersPage() {
       <td style="color:var(--muted)">${tx.note}</td>
     </tr>`).join('');
 
-  // Re-apply role so dynamically rendered admin-only elements are correctly toggled
   if(currentRole) applyRole(currentRole);
 }
 
@@ -1333,10 +1377,10 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 // ============================================================
 // PASSWORD LOCK — TWO-TIER ACCESS
 // ============================================================
-const ADMIN_PASSWORD  = 'Angstrom1!';   // Full edit access
-const VIEWER_PASSWORD = 'Angstrom2026'; // Read-only access
+const ADMIN_PASSWORD  = 'Angstrom1!';
+const VIEWER_PASSWORD = 'Angstrom2026';
 
-let currentRole = null; // 'admin' | 'viewer'
+let currentRole = null;
 
 function checkPassword() {
   const input = document.getElementById('lockInput');
@@ -1368,7 +1412,6 @@ function unlockApp(role) {
 function applyRole(role) {
   const isAdmin = role === 'admin';
 
-  // Show/hide the role badge in header
   const badge = document.getElementById('roleBadge');
   if(badge) {
     badge.textContent   = isAdmin ? '⚙ ADMIN' : '👁 VIEWER';
@@ -1376,12 +1419,10 @@ function applyRole(role) {
     badge.style.borderColor = isAdmin ? 'var(--gold)' : 'var(--border)';
   }
 
-  // All elements tagged admin-only
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = isAdmin ? '' : 'none';
   });
 
-  // Disable form inputs in view-only mode (belt-and-braces)
   if(!isAdmin) {
     document.querySelectorAll('.form-input, .form-select').forEach(el => {
       el.setAttribute('disabled','true');
@@ -1420,7 +1461,6 @@ function getWeekBets() {
 function openWeeklyReport() {
   generateBetsReport();
   generateHoldingsReport();
-  // reset to bets tab
   document.querySelectorAll('.report-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.report-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('rtab-bets').classList.add('active');
@@ -1544,7 +1584,6 @@ Syndicate HQ`;
 function copyReport(tab) {
   const el = document.getElementById(tab==='bets'?'reportBetsContent':'reportHoldingsContent');
   navigator.clipboard.writeText(el.textContent).then(()=>showToast('Copied to clipboard')).catch(()=>{
-    // fallback
     const ta = document.createElement('textarea');
     ta.value=el.textContent; document.body.appendChild(ta); ta.select();
     document.execCommand('copy'); document.body.removeChild(ta);
@@ -1559,6 +1598,69 @@ function openMailto(tab) {
   const subject = subjectMatch ? subjectMatch[1] : 'Syndicate Weekly Report';
   const body = full.replace(/^Subject: .+\n\n?/,'');
   window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// ============================================================
+// OPEN BETS — WhatsApp Draft
+// ============================================================
+function openOpenBetsModal() {
+  const pendingBets = BETS.filter(b => b.won === 'Pending');
+  const totalStake = pendingBets.reduce((s,b) => s + b.stake, 0);
+  const totalReturn = pendingBets.reduce((s,b) => s + (b.stake * b.odds), 0);
+
+  // Update header stats
+  document.getElementById('openBetsModalCount').textContent = pendingBets.length;
+  document.getElementById('openBetsModalStake').textContent = `£${totalStake.toFixed(0)}`;
+  document.getElementById('openBetsModalReturn').textContent = `£${totalReturn.toFixed(0)}`;
+
+  // Build message text
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+
+  let msg = '';
+  msg += `📊 *SYNDICATE — OPEN BETS*\n`;
+  msg += `🗓 ${dateStr}\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  if(pendingBets.length === 0) {
+    msg += `No open bets at the moment.\n`;
+  } else {
+    pendingBets.forEach((b, i) => {
+      const selLine = [b.selection, b.line].filter(Boolean).join(' ');
+      msg += `*${i+1}. ${b.player || b.fixture}*\n`;
+      msg += `   🏏 ${b.tournament}\n`;
+      msg += `   📋 ${b.fixture}\n`;
+      msg += `   📌 ${b.market}${selLine ? ' — ' + selLine : ''}\n`;
+      msg += `   💰 Stake: £${b.stake} @ ${b.odds}\n`;
+      msg += `   🎯 Potential Return: £${(b.stake * b.odds).toFixed(0)}\n`;
+      if(i < pendingBets.length - 1) msg += `\n`;
+    });
+  }
+
+  msg += `\n━━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📦 *${pendingBets.length} open bet${pendingBets.length !== 1 ? 's' : ''}*\n`;
+  msg += `💵 *Total staked: £${totalStake.toFixed(0)}*\n`;
+  msg += `🏆 *Max return: £${totalReturn.toFixed(0)}*`;
+
+  document.getElementById('openBetsContent').textContent = msg;
+  document.getElementById('openBetsModal').classList.add('open');
+}
+
+function copyOpenBets() {
+  const text = document.getElementById('openBetsContent').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Copied to clipboard');
+  });
+}
+
+function sendWhatsApp() {
+  const text = document.getElementById('openBetsContent').textContent;
+  const encoded = encodeURIComponent(text);
+  // Opens WhatsApp with the pre-filled message (user picks recipient)
+  window.open(`https://wa.me/?text=${encoded}`, '_blank');
 }
 
 // ============================================================
