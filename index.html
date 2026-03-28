@@ -628,6 +628,10 @@ tbody td { padding:9px 12px; white-space:nowrap; }
     <div class="modal-title" id="txModalTitle">Deposit</div>
     <div id="txMemberInfo" style="margin-bottom:16px;font-size:0.82rem;color:var(--muted)"></div>
     <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="tx_date">
+    </div>
+    <div class="form-group">
       <label class="form-label">Amount (£)</label>
       <input type="number" class="form-input" id="tx_amount" placeholder="e.g. 500" min="1">
     </div>
@@ -1263,6 +1267,7 @@ function openTx(initials, action) {
   document.getElementById('txModalTitle').textContent = `${action} — ${initials}`;
   document.getElementById('txMemberInfo').textContent = action === 'Withdrawal' ? 'Units will be calculated at current unit price and deducted.' : 'New units will be issued at current unit price.';
   document.getElementById('txConfirmBtn').className = `btn ${action==='Deposit'?'btn-green':'btn-red'} btn-sm`;
+  document.getElementById('tx_date').value = new Date().toISOString().split('T')[0];
   document.getElementById('tx_amount').value='';
   document.getElementById('tx_note').value='';
   document.getElementById('txModal').classList.add('open');
@@ -1275,11 +1280,22 @@ function confirmTransaction() {
 
   const {unitPrice} = getMemberStats();
   const units = txAction==='Deposit' ? amount/unitPrice : -(amount/unitPrice);
-  const today = new Date();
-  const dd=String(today.getDate()).padStart(2,'0'),mm=String(today.getMonth()+1).padStart(2,'0'),yyyy=today.getFullYear();
+
+  // Use chosen date, fall back to today
+  const txDateInput = document.getElementById('tx_date').value;
+  let txDateStr;
+  if(txDateInput) {
+    const d = new Date(txDateInput);
+    const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),yyyy=d.getFullYear();
+    txDateStr = `${dd}/${mm}/${yyyy}`;
+  } else {
+    const today = new Date();
+    const dd=String(today.getDate()).padStart(2,'0'),mm=String(today.getMonth()+1).padStart(2,'0'),yyyy=today.getFullYear();
+    txDateStr = `${dd}/${mm}/${yyyy}`;
+  }
 
   TRANSACTIONS.push({
-    date:`${dd}/${mm}/${yyyy}`,
+    date:txDateStr,
     member:txMemberInitials, initials:txMemberInitials,
     action:txAction, amount, unitPrice, units, note
   });
