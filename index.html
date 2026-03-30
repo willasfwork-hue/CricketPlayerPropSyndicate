@@ -35,164 +35,13 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,135,0.4);} 50%{opacity:0.7;box-shadow:0 0 0 6px rgba(0,255,135,0);} }
 
 nav { display:flex; gap:2px; padding:0 40px; border-bottom:1px solid var(--border); background:var(--surface); }
-.nav-btn { padding:14px 24px; background:none; border:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.72rem; letter-spacing:1.5px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+.nav-btn { padding:14px 24px; background:none; border:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.72rem; letter-spacing:1.5px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; text-transform:uppercase; }
 .nav-btn:hover { color:var(--text); }
 .nav-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
-.nav-pending-badge { background:rgba(255,209,102,0.18); color:var(--gold); border-radius:10px; padding:1px 7px; font-size:0.6rem; font-family:'DM Mono',monospace; letter-spacing:1px; min-width:20px; text-align:center; transition:all 0.3s; }
-.nav-pending-badge.pulse-anim { animation:badgePulse 2s ease-in-out infinite; }
-@keyframes badgePulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
 
 .page { display:none; padding:30px 40px; }
 .page.active { display:block; }
 
-/* ===== OPEN BETS PAGE ===== */
-#page-openbets { padding:30px 40px; }
-
-.ob-hero { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
-.ob-stat { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:20px 22px; position:relative; overflow:hidden; }
-.ob-stat::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
-.ob-stat.gold::before { background:var(--gold); }
-.ob-stat.accent::before { background:var(--accent); }
-.ob-stat.green::before { background:var(--green); }
-.ob-stat.orange::before { background:var(--accent2); }
-.ob-stat-label { font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
-.ob-stat-value { font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:1px; line-height:1; }
-.ob-stat-value.gold { color:var(--gold); }
-.ob-stat-value.accent { color:var(--accent); }
-.ob-stat-value.green { color:var(--green); }
-.ob-stat-value.orange { color:var(--accent2); }
-.ob-stat-sub { font-size:0.72rem; color:var(--muted); margin-top:6px; }
-
-.ob-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
-
-.ob-card {
-  background:var(--card-bg);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:0;
-  overflow:hidden;
-  transition:border-color 0.2s, transform 0.15s;
-  animation:fadeUp 0.3s ease both;
-  position:relative;
-}
-.ob-card:hover { border-color:rgba(255,209,102,0.35); transform:translateY(-1px); }
-
-.ob-card-header {
-  padding:14px 18px 12px;
-  background:linear-gradient(135deg,rgba(255,209,102,0.06),rgba(255,107,53,0.04));
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-}
-.ob-card-num {
-  font-family:'Bebas Neue',sans-serif;
-  font-size:0.9rem;
-  letter-spacing:2px;
-  color:var(--muted);
-  line-height:1;
-  padding-top:2px;
-  min-width:28px;
-}
-.ob-card-title {
-  flex:1;
-  font-family:'DM Sans',sans-serif;
-  font-weight:600;
-  font-size:0.88rem;
-  color:var(--text);
-  line-height:1.3;
-}
-.ob-card-tournament {
-  font-family:'DM Mono',monospace;
-  font-size:0.6rem;
-  letter-spacing:1.5px;
-  color:var(--accent);
-  text-transform:uppercase;
-  margin-top:3px;
-}
-.ob-pending-dot {
-  width:8px; height:8px; border-radius:50%;
-  background:var(--gold);
-  flex-shrink:0;
-  margin-top:5px;
-  box-shadow:0 0 0 3px rgba(255,209,102,0.15);
-  animation:pulse 2.5s infinite;
-}
-
-.ob-card-body { padding:14px 18px; }
-
-.ob-meta-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
-.ob-meta-chip {
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:4px;
-  padding:3px 9px;
-  font-family:'DM Mono',monospace;
-  font-size:0.62rem;
-  letter-spacing:1px;
-  color:var(--muted);
-  display:flex;
-  align-items:center;
-  gap:5px;
-}
-.ob-meta-chip.sel-under { border-color:rgba(0,229,255,0.3); color:var(--accent); background:rgba(0,229,255,0.06); }
-.ob-meta-chip.sel-over { border-color:rgba(255,107,53,0.3); color:var(--accent2); background:rgba(255,107,53,0.06); }
-
-.ob-financials {
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:1px;
-  background:var(--border);
-  border-radius:6px;
-  overflow:hidden;
-  margin-top:10px;
-}
-.ob-fin-cell {
-  background:var(--surface2);
-  padding:10px 12px;
-  text-align:center;
-}
-.ob-fin-label { font-family:'DM Mono',monospace; font-size:0.52rem; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
-.ob-fin-val { font-family:'DM Mono',monospace; font-size:0.82rem; font-weight:500; }
-.ob-fin-val.stake { color:var(--text); }
-.ob-fin-val.odds { color:var(--gold); }
-.ob-fin-val.ret { color:var(--green); }
-
-.ob-card-footer {
-  padding:10px 18px;
-  border-top:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:rgba(0,0,0,0.2);
-}
-.ob-date-badge { font-family:'DM Mono',monospace; font-size:0.62rem; color:var(--muted); letter-spacing:1px; }
-.ob-fixture-label { font-family:'DM Mono',monospace; font-size:0.6rem; color:var(--muted); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-.ob-empty {
-  grid-column:1/-1;
-  text-align:center;
-  padding:80px 40px;
-  color:var(--muted);
-  font-family:'DM Mono',monospace;
-}
-.ob-empty-icon { font-size:3rem; margin-bottom:16px; opacity:0.3; }
-.ob-empty-title { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:4px; color:var(--muted); margin-bottom:8px; }
-.ob-empty-sub { font-size:0.7rem; letter-spacing:1px; color:var(--muted); opacity:0.6; }
-
-.ob-toolbar { display:flex; gap:12px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
-.ob-filter-select { background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:5px; font-family:'DM Mono',monospace; font-size:0.7rem; cursor:pointer; outline:none; }
-.ob-filter-select:focus { border-color:var(--accent); }
-.ob-whatsapp-btn {
-  margin-left:auto;
-  display:flex; align-items:center; gap:8px;
-  background:var(--gold); color:#000; border:none; padding:9px 18px; border-radius:6px;
-  font-family:'DM Mono',monospace; font-size:0.72rem; letter-spacing:1px; cursor:pointer; font-weight:600; transition:all 0.2s;
-}
-.ob-whatsapp-btn:hover { background:#e0b84e; transform:translateY(-1px); }
-
-/* ===== EXISTING STYLES ===== */
 .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
 .kpi { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:20px 22px; position:relative; overflow:hidden; }
 .kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
@@ -320,8 +169,8 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 .toast.show { opacity:1; transform:translateY(0); }
 .toast.error { border-color:var(--red); color:var(--red); }
 
-@media(max-width:1100px) { .kpi-row{grid-template-columns:repeat(3,1fr);} .member-grid{grid-template-columns:repeat(2,1fr);} .ob-hero{grid-template-columns:repeat(2,1fr);} }
-@media(max-width:700px) { header,nav,.page{padding-left:16px;padding-right:16px;} .kpi-row{grid-template-columns:repeat(2,1fr);} .grid-2,.grid-3,.grid-31{grid-template-columns:1fr;} .member-grid{grid-template-columns:1fr;} .ob-hero{grid-template-columns:repeat(2,1fr);} .ob-grid{grid-template-columns:1fr;} }
+@media(max-width:1100px) { .kpi-row{grid-template-columns:repeat(3,1fr);} .member-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:700px) { header,nav,.page{padding-left:16px;padding-right:16px;} .kpi-row{grid-template-columns:repeat(2,1fr);} .grid-2,.grid-3,.grid-31{grid-template-columns:1fr;} .member-grid{grid-template-columns:1fr;} }
 .page.active .card { animation:fadeUp 0.3s ease both; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 
@@ -564,37 +413,14 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 </header>
 
 <nav>
-  <button class="nav-btn active" onclick="showPage('openbets',this)">
-    Open Bets
-    <span class="nav-pending-badge pulse-anim" id="navPendingBadge">0</span>
-  </button>
-  <button class="nav-btn" onclick="showPage('overview',this)">Overview</button>
+  <button class="nav-btn active" onclick="showPage('overview',this)">Overview</button>
   <button class="nav-btn" onclick="showPage('bets',this)">All Bets</button>
   <button class="nav-btn" onclick="showPage('analytics',this)">Analytics</button>
   <button class="nav-btn" onclick="showPage('members',this)">Members</button>
 </nav>
 
-<!-- ======= OPEN BETS PAGE ======= -->
-<div class="page active" id="page-openbets">
-  <div class="ob-hero" id="obHeroStats"></div>
-  <div class="ob-toolbar">
-    <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:1px">FILTER:</span>
-    <select class="ob-filter-select" id="obFilterTourney" onchange="renderOpenBets()"><option value="">All Tournaments</option></select>
-    <select class="ob-filter-select" id="obFilterSel" onchange="renderOpenBets()">
-      <option value="">All Selections</option>
-      <option value="Under">Under</option>
-      <option value="Over">Over</option>
-    </select>
-    <button class="ob-whatsapp-btn admin-only" onclick="openOpenBetsModal()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      WhatsApp Draft
-    </button>
-  </div>
-  <div class="ob-grid" id="obGrid"></div>
-</div>
-
 <!-- OVERVIEW PAGE -->
-<div class="page" id="page-overview">
+<div class="page active" id="page-overview">
   <div class="kpi-row" id="kpi-row"></div>
   <div class="grid-2">
     <div class="card">
@@ -643,6 +469,9 @@ tbody td { padding:9px 12px; white-space:nowrap; }
     <button class="add-bet-btn admin-only" onclick="openAddBet()">+ Add Bet</button>
     <button class="add-bet-btn admin-only" onclick="openBulkAdd()" style="background:var(--accent2);color:#fff">+ Bulk Add</button>
     <button class="add-bet-btn admin-only" onclick="exportCSV()" style="background:var(--green)">⬇ Export CSV</button>
+    <button class="add-bet-btn admin-only" id="openBetsBtn" onclick="openOpenBetsModal()" style="background:var(--gold);color:#000;">
+      📲 Open Bets <span id="openBetsBadge" class="open-bets-count-badge" style="background:rgba(0,0,0,0.2);border-color:rgba(0,0,0,0.3);color:#000">0</span>
+    </button>
     <span class="filter-label" style="margin-left:8px">FILTER:</span>
     <input class="search-input" id="searchInput" placeholder="Search player, fixture..." oninput="renderTable()">
     <select class="filter-select" id="filterSport" onchange="renderTable()"><option value="">All Sports</option></select>
@@ -1051,7 +880,7 @@ tbody td { padding:9px 12px; white-space:nowrap; }
   </div>
 </div>
 
-<!-- ======= OPEN BETS WHATSAPP MODAL ======= -->
+<!-- ======= OPEN BETS MODAL ======= -->
 <div class="modal-overlay" id="openBetsModal">
   <div class="modal" style="width:700px;max-width:96vw">
     <button class="modal-close" onclick="closeModal('openBetsModal')">✕</button>
@@ -1204,108 +1033,6 @@ function getMemberStats() {
   return {members,totalUnits,unitPrice,fundValue,totalDeposited,totalWithdrawn,totalPL};
 }
 
-// ============================================================
-// OPEN BETS PAGE
-// ============================================================
-function buildOpenBetsPage() {
-  const pending = BETS.filter(b => b.won === 'Pending');
-  const totalStake = pending.reduce((s,b) => s+b.stake, 0);
-  const totalReturn = pending.reduce((s,b) => s+(b.stake*b.odds), 0);
-  const totalProfit = totalReturn - totalStake;
-  const avgOdds = pending.length ? (pending.reduce((s,b)=>s+b.odds,0)/pending.length) : 0;
-
-  // Update nav badge
-  const navBadge = document.getElementById('navPendingBadge');
-  if(navBadge) {
-    navBadge.textContent = pending.length;
-    navBadge.className = 'nav-pending-badge' + (pending.length > 0 ? ' pulse-anim' : '');
-  }
-
-  // Hero stats
-  document.getElementById('obHeroStats').innerHTML = [
-    {label:'Open Bets', value:pending.length, cls:'gold', color:'gold', sub:'Awaiting settlement'},
-    {label:'Total Staked', value:`\u00a3${fmt(totalStake)}`, cls:'accent', color:'accent', sub:'Capital at risk'},
-    {label:'Max Return', value:`\u00a3${fmt(totalReturn)}`, cls:'green', color:'green', sub:`Profit if all win: +\u00a3${fmt(totalProfit)}`},
-    {label:'Avg Odds', value:avgOdds.toFixed(3), cls:'orange', color:'orange', sub:'Decimal average'},
-  ].map(s=>`<div class="ob-stat ${s.cls}">
-    <div class="ob-stat-label">${s.label}</div>
-    <div class="ob-stat-value ${s.color}">${s.value}</div>
-    <div class="ob-stat-sub">${s.sub}</div>
-  </div>`).join('');
-
-  // Populate tournament filter
-  const tourneySel = document.getElementById('obFilterTourney');
-  const currentTourney = tourneySel.value;
-  const tourneys = [...new Set(pending.map(b=>b.tournament).filter(Boolean))].sort();
-  tourneySel.innerHTML = '<option value="">All Tournaments</option>' +
-    tourneys.map(t=>`<option value="${t}"${t===currentTourney?' selected':''}>${t}</option>`).join('');
-
-  renderOpenBets();
-}
-
-function renderOpenBets() {
-  const tourney = document.getElementById('obFilterTourney').value;
-  const sel = document.getElementById('obFilterSel').value;
-
-  let pending = BETS.filter(b => b.won === 'Pending');
-  if(tourney) pending = pending.filter(b => b.tournament === tourney);
-  if(sel) pending = pending.filter(b => b.selection === sel);
-
-  const grid = document.getElementById('obGrid');
-
-  if(pending.length === 0) {
-    grid.innerHTML = `<div class="ob-empty">
-      <div class="ob-empty-icon">✅</div>
-      <div class="ob-empty-title">${BETS.filter(b=>b.won==='Pending').length === 0 ? 'All Settled' : 'No Matches'}</div>
-      <div class="ob-empty-sub">${BETS.filter(b=>b.won==='Pending').length === 0 ? 'No pending bets — everything has been settled.' : 'No open bets match the current filters.'}</div>
-    </div>`;
-    return;
-  }
-
-  grid.innerHTML = pending.map((b, i) => {
-    const selChipClass = b.selection === 'Under' ? 'sel-under' : b.selection === 'Over' ? 'sel-over' : '';
-    const selLine = [b.selection, b.line ? b.line : null].filter(Boolean).join(' ');
-    const potReturn = (b.stake * b.odds).toFixed(0);
-    const potProfit = (b.stake * b.odds - b.stake).toFixed(0);
-    return `<div class="ob-card" style="animation-delay:${i*0.04}s">
-      <div class="ob-card-header">
-        <div class="ob-card-num">#${i+1}</div>
-        <div style="flex:1">
-          <div class="ob-card-title">${b.player || b.fixture || '—'}</div>
-          <div class="ob-card-tournament">${b.tournament || '—'}</div>
-        </div>
-        <div class="ob-pending-dot"></div>
-      </div>
-      <div class="ob-card-body">
-        <div class="ob-meta-row">
-          ${b.market ? `<span class="ob-meta-chip">${b.market}</span>` : ''}
-          ${selLine ? `<span class="ob-meta-chip ${selChipClass}">${selLine}</span>` : ''}
-          ${b.bookmaker ? `<span class="ob-meta-chip">${b.bookmaker}</span>` : ''}
-        </div>
-        <div class="ob-financials">
-          <div class="ob-fin-cell">
-            <div class="ob-fin-label">Stake</div>
-            <div class="ob-fin-val stake">\u00a3${b.stake}</div>
-          </div>
-          <div class="ob-fin-cell">
-            <div class="ob-fin-label">Odds</div>
-            <div class="ob-fin-val odds">${b.odds}</div>
-          </div>
-          <div class="ob-fin-cell">
-            <div class="ob-fin-label">Return</div>
-            <div class="ob-fin-val ret">\u00a3${potReturn}</div>
-          </div>
-        </div>
-      </div>
-      <div class="ob-card-footer">
-        <span class="ob-date-badge">${b.date}</span>
-        <span class="ob-fixture-label">${b.fixture || '—'}</span>
-        ${currentRole === 'admin' ? `<button class="btn btn-secondary btn-sm" onclick="openEditBet(${b.id})" style="font-size:0.58rem;padding:4px 10px">✏ Edit</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
 function buildKPIs() {
   const settled = BETS.filter(b=>b.won==='Yes'||b.won==='No');
   const won = BETS.filter(b=>b.won==='Yes');
@@ -1332,12 +1059,9 @@ function buildKPIs() {
 
   document.getElementById('betCount').textContent = `${BETS.length} BETS LOADED`;
 
-  // Update nav pending badge
-  const navBadge = document.getElementById('navPendingBadge');
-  if(navBadge) {
-    navBadge.textContent = pending.length;
-    navBadge.className = 'nav-pending-badge' + (pending.length > 0 ? ' pulse-anim' : '');
-  }
+  const openCount = BETS.filter(b=>b.won==='Pending').length;
+  const badge = document.getElementById('openBetsBadge');
+  if(badge) badge.textContent = openCount;
 }
 
 let charts = {};
@@ -1439,7 +1163,7 @@ function buildTopBets() {
 let sortKey='id', sortDir=1, currentBets=[...BETS];
 
 function populateFilters() {
-  const addOpts=(id,arr)=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;arr.forEach(v=>{if(![...el.options].map(o=>o.value).includes(v)){const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);}});el.value=cur;};
+  const addOpts=(id,arr)=>{const el=document.getElementById(id);arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});};
   addOpts('filterSport',[...new Set(BETS.map(b=>b.sport).filter(Boolean))].sort());
   addOpts('filterTourney',[...new Set(BETS.map(b=>b.tournament).filter(Boolean))].sort());
   addOpts('filterBookie',[...new Set(BETS.map(b=>b.bookmaker).filter(Boolean))].sort());
@@ -1493,6 +1217,7 @@ function sortTable(key) {
 function openAddBet() {
   const today=new Date();
   document.getElementById('nb_date').value=today.toISOString().split('T')[0];
+  // Pre-fill from last bet
   if(BETS.length > 0) {
     const last = BETS[BETS.length-1];
     document.getElementById('nb_bookmaker').value = last.bookmaker||'';
@@ -1540,6 +1265,8 @@ async function submitNewBet() {
 function openBulkAdd() {
   const today = new Date();
   document.getElementById('bulk_date').value = today.toISOString().split('T')[0];
+
+  // Pre-fill fixture fields from last bet
   if(BETS.length > 0) {
     const last = BETS[BETS.length-1];
     document.getElementById('bulk_bookmaker').value = last.bookmaker||'';
@@ -1551,8 +1278,12 @@ function openBulkAdd() {
     document.getElementById('bulk_tournament').value = '';
     document.getElementById('bulk_fixture').value = '';
   }
+
+  // Reset rows - start with 3 empty rows
   document.getElementById('bulkRowsBody').innerHTML = '';
-  addBulkRow(); addBulkRow(); addBulkRow();
+  addBulkRow();
+  addBulkRow();
+  addBulkRow();
   updateBulkCount();
   document.getElementById('bulkAddModal').classList.add('open');
 }
@@ -1616,10 +1347,13 @@ async function submitBulkBets() {
   const sport = document.getElementById('bulk_sport').value;
   const tournament = document.getElementById('bulk_tournament').value.trim();
   const fixture = document.getElementById('bulk_fixture').value.trim();
+
   if(!fixture) { showToast('Please enter a fixture','error'); return; }
   if(!dateRaw) { showToast('Please enter a date','error'); return; }
+
   const {str: dateStr, d: dateObj} = makeDateStr(dateRaw);
   const rows = document.getElementById('bulkRowsBody').querySelectorAll('tr');
+
   const newBets = [];
   let rowNum = 0;
   for(const row of rows) {
@@ -1633,22 +1367,35 @@ async function submitBulkBets() {
     const stake = parseFloat(inputs[3].value);
     const odds = parseFloat(inputs[4].value);
     const result = selects[1].value;
-    if(!market && !player) continue;
-    if(!stake || isNaN(stake) || !odds || isNaN(odds)) { showToast(`Row ${rowNum}: stake and odds are required`, 'error'); return; }
+
+    if(!market && !player) continue; // skip empty rows silently
+    if(!stake || isNaN(stake) || !odds || isNaN(odds)) {
+      showToast(`Row ${rowNum}: stake and odds are required`, 'error'); return;
+    }
+
     let pl=0, payout=0;
     if(result==='Yes'){payout=parseFloat((stake*odds).toFixed(2));pl=parseFloat((payout-stake).toFixed(2));}
     else if(result==='No'){pl=-stake;payout=0;}
     else if(result==='Void'){pl=0;payout=stake;}
+
     newBets.push({id:nextId++,date:dateStr,bookmaker,sport,tournament,fixture,market,player,selection,line,inplay:'No',stake,odds,won:result,payout,pl,dateObj});
   }
+
   if(newBets.length === 0) { showToast('No valid rows to add','error'); return; }
+
   newBets.forEach(b => BETS.push(b));
   recalcRunning();
   closeModal('bulkAddModal');
   refreshAll();
-  showToast(`${newBets.length} bets added — saving...`);
-  try { await Promise.all(newBets.map(b => sbAddBet(b))); showToast(`${newBets.length} bets saved`); }
-  catch(e) { showToast('Save failed','error'); console.error(e); }
+  showToast(`${newBets.length} bets added \u2014 saving...`);
+
+  try {
+    await Promise.all(newBets.map(b => sbAddBet(b)));
+    showToast(`${newBets.length} bets saved`);
+  } catch(e) {
+    showToast('Save failed','error');
+    console.error(e);
+  }
 }
 
 // ============================================================
@@ -1708,16 +1455,22 @@ function saveEditBet() {
 async function deleteBet() {
   const b=BETS.find(x=>x.id===editBetId);
   if(!b)return;
-  if(!confirm(`Delete bet #${b.id} — ${b.player||b.fixture}? This cannot be undone.`))return;
+  if(!confirm(`Delete bet #${b.id} \u2014 ${b.player||b.fixture}? This cannot be undone.`))return;
   closeModal('editBetModal');
   BETS=BETS.filter(x=>x.id!==editBetId);
   recalcRunning();
   refreshAll();
   showToast('Deleting...');
   try {
-    if(b._sbId){const {error}=await sb.from('bets').delete().eq('id',b._sbId);if(error) throw error;}
+    if(b._sbId){
+      const {error}=await sb.from('bets').delete().eq('id',b._sbId);
+      if(error) throw error;
+    }
     showToast('Bet deleted');
-  } catch(e){showToast('Delete failed','error');console.error(e);}
+  } catch(e){
+    showToast('Delete failed','error');
+    console.error(e);
+  }
 }
 
 // ============================================================
@@ -1783,10 +1536,22 @@ function buildMembersPage() {
       <div class="member-name" style="color:${m.color}">${m.initials}</div>
       <div style="font-size:0.7rem;color:var(--muted);font-family:'DM Mono',monospace">${m.sharePercent.toFixed(1)}% share \u00b7 ${m.units.toFixed(2)} units</div>
       <div class="member-stats">
-        <div class="member-stat"><div class="member-stat-label">Current Value</div><div class="member-stat-val" style="color:var(--text)">\u00a3${m.currentValue.toFixed(2)}</div></div>
-        <div class="member-stat"><div class="member-stat-label">Net Deposited</div><div class="member-stat-val" style="color:var(--muted)">\u00a3${m.netDeposited.toFixed(2)}</div></div>
-        <div class="member-stat"><div class="member-stat-label">Total P&L</div><div class="member-stat-val" style="color:${m.unrealisedPL>=0?'var(--green)':'var(--red)'}">${m.unrealisedPL>=0?'+':'-'}\u00a3${fmt(m.unrealisedPL)} (${m.unrealisedPLPct.toFixed(1)}%)</div></div>
-        <div class="member-stat"><div class="member-stat-label">Total Deposited</div><div class="member-stat-val" style="color:var(--muted)">\u00a3${m.deposited.toFixed(0)}</div></div>
+        <div class="member-stat">
+          <div class="member-stat-label">Current Value</div>
+          <div class="member-stat-val" style="color:var(--text)">\u00a3${m.currentValue.toFixed(2)}</div>
+        </div>
+        <div class="member-stat">
+          <div class="member-stat-label">Net Deposited</div>
+          <div class="member-stat-val" style="color:var(--muted)">\u00a3${m.netDeposited.toFixed(2)}</div>
+        </div>
+        <div class="member-stat">
+          <div class="member-stat-label">Total P&L</div>
+          <div class="member-stat-val" style="color:${m.unrealisedPL>=0?'var(--green)':'var(--red)'}">${m.unrealisedPL>=0?'+':'-'}\u00a3${fmt(m.unrealisedPL)} (${m.unrealisedPLPct.toFixed(1)}%)</div>
+        </div>
+        <div class="member-stat">
+          <div class="member-stat-label">Total Deposited</div>
+          <div class="member-stat-val" style="color:var(--muted)">\u00a3${m.deposited.toFixed(0)}</div>
+        </div>
       </div>
       <div class="member-actions admin-only">
         <button class="btn btn-green btn-sm" onclick="openTx('${m.initials}','Deposit')">+ Deposit</button>
@@ -1810,12 +1575,14 @@ function buildMembersPage() {
 }
 
 function openTx(initials, action) {
-  txMemberInitials = initials; txAction = action;
-  document.getElementById('txModalTitle').textContent = `${action} — ${initials}`;
+  txMemberInitials = initials;
+  txAction = action;
+  document.getElementById('txModalTitle').textContent = `${action} \u2014 ${initials}`;
   document.getElementById('txMemberInfo').textContent = action === 'Withdrawal' ? 'Units will be calculated at current unit price and deducted.' : 'New units will be issued at current unit price.';
   document.getElementById('txConfirmBtn').className = `btn ${action==='Deposit'?'btn-green':'btn-red'} btn-sm`;
   document.getElementById('tx_date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('tx_amount').value=''; document.getElementById('tx_note').value='';
+  document.getElementById('tx_amount').value='';
+  document.getElementById('tx_note').value='';
   document.getElementById('txModal').classList.add('open');
 }
 
@@ -1823,8 +1590,10 @@ function confirmTransaction() {
   const amount = parseFloat(document.getElementById('tx_amount').value);
   const note = document.getElementById('tx_note').value.trim() || txAction;
   if(!amount || isNaN(amount) || amount <= 0) { showToast('Enter a valid amount','error'); return; }
+
   const {unitPrice} = getMemberStats();
   const units = txAction==='Deposit' ? amount/unitPrice : -(amount/unitPrice);
+
   const txDateInput = document.getElementById('tx_date').value;
   let txDateStr;
   if(txDateInput) {
@@ -1836,7 +1605,13 @@ function confirmTransaction() {
     const dd=String(today.getDate()).padStart(2,'0'),mm=String(today.getMonth()+1).padStart(2,'0'),yyyy=today.getFullYear();
     txDateStr = `${dd}/${mm}/${yyyy}`;
   }
-  TRANSACTIONS.push({date:txDateStr,member:txMemberInitials,initials:txMemberInitials,action:txAction,amount,unitPrice,units,note});
+
+  TRANSACTIONS.push({
+    date:txDateStr,
+    member:txMemberInitials, initials:txMemberInitials,
+    action:txAction, amount, unitPrice, units, note
+  });
+
   closeModal('txModal');
   buildMembersPage();
   buildKPIs();
@@ -1846,7 +1621,9 @@ function confirmTransaction() {
 }
 
 function openAddMember() {
-  document.getElementById('nm_name').value=''; document.getElementById('nm_initials').value=''; document.getElementById('nm_deposit').value='';
+  document.getElementById('nm_name').value='';
+  document.getElementById('nm_initials').value='';
+  document.getElementById('nm_deposit').value='';
   document.getElementById('addMemberModal').classList.add('open');
 }
 
@@ -1856,16 +1633,20 @@ function addNewMember() {
   const deposit=parseFloat(document.getElementById('nm_deposit').value);
   if(!initials||!deposit||isNaN(deposit)||deposit<=0){showToast('Please fill in all fields','error');return;}
   if(Object.keys(MEMBER_NAMES).includes(initials)){showToast('Member with these initials already exists','error');return;}
+
   MEMBER_NAMES[initials]=name||initials;
   const colors=['#06b6d4','#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'];
   MEMBER_COLORS[initials]=colors[Object.keys(MEMBER_COLORS).length % colors.length];
+
   const {unitPrice}=getMemberStats();
   const units=deposit/unitPrice;
   const today=new Date();
   const dd=String(today.getDate()).padStart(2,'0'),mm=String(today.getMonth()+1).padStart(2,'0'),yyyy=today.getFullYear();
-  TRANSACTIONS.push({date:`${dd}/${mm}/${yyyy}`,member:initials,initials,action:'Deposit',amount:deposit,unitPrice,units,note:'New member — Initial Contribution'});
+  TRANSACTIONS.push({date:`${dd}/${mm}/${yyyy}`,member:initials,initials,action:'Deposit',amount:deposit,unitPrice,units,note:'New member \u2014 Initial Contribution'});
+
   closeModal('addMemberModal');
-  buildMembersPage(); buildKPIs();
+  buildMembersPage();
+  buildKPIs();
   const _mtx=TRANSACTIONS[TRANSACTIONS.length-1];
   showToast('Saving...');
   Promise.all([sbEnsureMember(initials,name||initials,MEMBER_COLORS[initials]),sbAddTransaction(_mtx)]).then(()=>showToast(`${initials} saved`)).catch(e=>{showToast('Save failed','error');console.error(e);});
@@ -1878,7 +1659,6 @@ function showPage(name, btn) {
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`page-${name}`).classList.add('active');
   if(btn) btn.classList.add('active');
-  if(name==='openbets'){buildOpenBetsPage();}
   if(name==='analytics'&&!analyticsReady){buildAnalytics();analyticsReady=true;}
   if(name==='members'){buildMembersPage();membersReady=true;}
 }
@@ -1887,14 +1667,14 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 function showToast(msg, type='') {
   const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast'+(type?' '+type:'');
+  t.textContent=msg;
+  t.className='toast'+(type?' '+type:'');
   requestAnimationFrame(()=>{t.classList.add('show');});
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
 function refreshAll() {
   buildKPIs();
-  buildOpenBetsPage();
   buildEquityChart();
   buildMonthlyChart();
   buildWinLossChart();
@@ -1918,6 +1698,7 @@ function checkPassword() {
   const input = document.getElementById('lockInput');
   const err   = document.getElementById('lockError');
   const val   = input.value;
+
   if(val === ADMIN_PASSWORD) {
     sessionStorage.setItem('syndicateAuth','admin');
     unlockApp('admin');
@@ -1942,15 +1723,18 @@ function unlockApp(role) {
 
 function applyRole(role) {
   const isAdmin = role === 'admin';
+
   const badge = document.getElementById('roleBadge');
   if(badge) {
-    badge.textContent   = isAdmin ? '⚙ ADMIN' : '👁 VIEWER';
+    badge.textContent   = isAdmin ? '\u2699 ADMIN' : '\U0001f441 VIEWER';
     badge.style.color   = isAdmin ? 'var(--gold)' : 'var(--muted)';
     badge.style.borderColor = isAdmin ? 'var(--gold)' : 'var(--border)';
   }
+
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = isAdmin ? '' : 'none';
   });
+
   if(!isAdmin) {
     document.querySelectorAll('.form-input, .form-select').forEach(el => {
       el.setAttribute('disabled','true');
@@ -1975,12 +1759,14 @@ function exportCSV() {
 }
 
 function getWeekBets() {
-  const now = new Date(); const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
+  const now = new Date();
+  const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
   return BETS.filter(b => b.dateObj && b.dateObj >= weekAgo && b.dateObj <= now && b.won !== 'Pending');
 }
 
 function openWeeklyReport() {
-  generateBetsReport(); generateHoldingsReport();
+  generateBetsReport();
+  generateHoldingsReport();
   document.querySelectorAll('.report-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.report-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('rtab-bets').classList.add('active');
@@ -1997,8 +1783,10 @@ function switchReportTab(tab, btn) {
 
 function generateBetsReport() {
   const weekBets = getWeekBets();
-  const today = new Date(); const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate()-7);
+  const today = new Date();
+  const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate()-7);
   const fmt2 = d => d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
   const won = weekBets.filter(b=>b.won==='Yes');
   const lost = weekBets.filter(b=>b.won==='No');
   const voided = weekBets.filter(b=>b.won==='Void');
@@ -2007,13 +1795,46 @@ function generateBetsReport() {
   const weekROI = weekStaked ? (weekPL/weekStaked*100) : 0;
   const winRate = (won.length+lost.length) ? (won.length/(won.length+lost.length)*100) : 0;
   const totalPL = BETS.filter(b=>b.won!=='Pending').reduce((s,b)=>s+b.pl,0);
+
   let betLines = '';
   weekBets.forEach(b => {
-    const res = b.won==='Yes'?'✅ WON':b.won==='No'?'❌ LOST':'↩️ VOID';
-    const pl = b.pl>0?`+£${b.pl.toFixed(0)}`:`-£${Math.abs(b.pl).toFixed(0)}`;
+    const res = b.won==='Yes'?'\u2705 WON':b.won==='No'?'\u274c LOST':'\u21a9\ufe0f VOID';
+    const pl = b.pl>0?`+\u00a3${b.pl.toFixed(0)}`:`-\u00a3${Math.abs(b.pl).toFixed(0)}`;
     betLines += `  ${b.date.padEnd(12)} ${(b.player||b.fixture).substring(0,22).padEnd(23)} ${b.tournament.substring(0,12).padEnd(13)} ${b.selection||''}${b.line?' '+b.line:''} @ ${b.odds}  ${res}  ${pl}\n`;
   });
-  const report=`Subject: Syndicate Weekly Report — ${fmt2(weekAgo)} to ${fmt2(today)}\n\nHi all,\n\nHere's your weekly update for the Syndicate.\n\n${'━'.repeat(40)}\nWEEKLY SUMMARY  (${fmt2(weekAgo)} – ${fmt2(today)})\n${'━'.repeat(40)}\n\n  Bets Placed    : ${weekBets.length}\n  Won            : ${won.length}\n  Lost           : ${lost.length}\n  Void           : ${voided.length}\n  Win Rate       : ${winRate.toFixed(1)}%\n  Weekly P&L     : ${weekPL>=0?'+':''}£${weekPL.toFixed(2)}\n  Weekly ROI     : ${weekROI.toFixed(1)}%\n  All-Time P&L   : ${totalPL>=0?'+':''}£${totalPL.toFixed(2)}\n\n${'━'.repeat(40)}\nBET BREAKDOWN\n${'━'.repeat(40)}\n\n${weekBets.length > 0 ? betLines : '  No settled bets this week.\n'}\n${'━'.repeat(40)}\n\nFull dashboard available on request.\n\nRegards,\nSyndicate HQ`;
+
+  const report =
+`Subject: Syndicate Weekly Report \u2014 ${fmt2(weekAgo)} to ${fmt2(today)}
+
+Hi all,
+
+Here's your weekly update for the Syndicate.
+
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+WEEKLY SUMMARY  (${fmt2(weekAgo)} \u2013 ${fmt2(today)})
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+
+  Bets Placed    : ${weekBets.length}
+  Won            : ${won.length}
+  Lost           : ${lost.length}
+  Void           : ${voided.length}
+  Win Rate       : ${winRate.toFixed(1)}%
+  Weekly P&L     : ${weekPL>=0?'+':''}\u00a3${weekPL.toFixed(2)}
+  Weekly ROI     : ${weekROI.toFixed(1)}%
+  All-Time P&L   : ${totalPL>=0?'+':''}\u00a3${totalPL.toFixed(2)}
+
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+BET BREAKDOWN
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+
+${weekBets.length > 0 ? betLines : '  No settled bets this week.\n'}
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+
+Full dashboard available on request.
+
+Regards,
+Syndicate HQ`;
+
   document.getElementById('reportBetsContent').textContent = report;
 }
 
@@ -2023,21 +1844,56 @@ function generateHoldingsReport() {
   const today = new Date();
   const fmt2 = d => d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   const totalPL = BETS.filter(b=>b.won!=='Pending').reduce((s,b)=>s+b.pl,0);
+
   let memberLines = '';
   memberArr.forEach(m => {
-    const pl = m.unrealisedPL>=0?`+£${m.unrealisedPL.toFixed(2)}`:`-£${Math.abs(m.unrealisedPL).toFixed(2)}`;
+    const pl = m.unrealisedPL>=0?`+\u00a3${m.unrealisedPL.toFixed(2)}`:`-\u00a3${Math.abs(m.unrealisedPL).toFixed(2)}`;
     const pct = `(${m.unrealisedPLPct.toFixed(1)}%)`;
-    memberLines += `  ${m.initials.padEnd(6)} ${('£'+m.currentValue.toFixed(2)).padEnd(12)} ${('£'+m.netDeposited.toFixed(2)).padEnd(12)} ${(pl+' '+pct).padEnd(20)} ${m.sharePercent.toFixed(1)}%  ${m.units.toFixed(2)} units\n`;
+    memberLines +=
+`  ${m.initials.padEnd(6)} ${('\u00a3'+m.currentValue.toFixed(2)).padEnd(12)} ${('\u00a3'+m.netDeposited.toFixed(2)).padEnd(12)} ${(pl+' '+pct).padEnd(20)} ${m.sharePercent.toFixed(1)}%  ${m.units.toFixed(2)} units\n`;
   });
-  const report=`Subject: Syndicate Holdings Update — ${fmt2(today)}\n\nHi all,\n\nHere is your current holdings summary as of ${fmt2(today)}.\n\n${'━'.repeat(40)}\nFUND OVERVIEW\n${'━'.repeat(40)}\n\n  Fund NAV       : £${fundValue.toFixed(2)}\n  Unit Price     : £${unitPrice.toFixed(4)}\n  All-Time P&L   : ${totalPL>=0?'+':''}£${totalPL.toFixed(2)}\n  Members        : ${memberArr.length}\n\n${'━'.repeat(40)}\nINDIVIDUAL HOLDINGS\n${'━'.repeat(40)}\n\n  ${'ID'.padEnd(6)} ${'CUR VALUE'.padEnd(12)} ${'DEPOSITED'.padEnd(12)} ${'TOTAL P&L'.padEnd(20)} ${'SHARE'.padEnd(6)} UNITS\n  ${'-'.repeat(70)}\n${memberLines}\n${'━'.repeat(40)}\n\nCurrent value is calculated at today's unit price of £${unitPrice.toFixed(4)}.\nTo request a withdrawal or deposit, please contact the fund manager.\n\nRegards,\nSyndicate HQ`;
+
+  const report =
+`Subject: Syndicate Holdings Update \u2014 ${fmt2(today)}
+
+Hi all,
+
+Here is your current holdings summary as of ${fmt2(today)}.
+
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+FUND OVERVIEW
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+
+  Fund NAV       : \u00a3${fundValue.toFixed(2)}
+  Unit Price     : \u00a3${unitPrice.toFixed(4)}
+  All-Time P&L   : ${totalPL>=0?'+':''}\u00a3${totalPL.toFixed(2)}
+  Members        : ${memberArr.length}
+
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+INDIVIDUAL HOLDINGS
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+
+  ${'ID'.padEnd(6)} ${'CUR VALUE'.padEnd(12)} ${'DEPOSITED'.padEnd(12)} ${'TOTAL P&L'.padEnd(20)} ${'SHARE'.padEnd(6)} UNITS
+  ${'-'.repeat(70)}
+${memberLines}
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+
+Current value is calculated at today's unit price of \u00a3${unitPrice.toFixed(4)}.
+To request a withdrawal or deposit, please contact the fund manager.
+
+Regards,
+Syndicate HQ`;
+
   document.getElementById('reportHoldingsContent').textContent = report;
 }
 
 function copyReport(tab) {
   const el = document.getElementById(tab==='bets'?'reportBetsContent':'reportHoldingsContent');
   navigator.clipboard.writeText(el.textContent).then(()=>showToast('Copied to clipboard')).catch(()=>{
-    const ta = document.createElement('textarea'); ta.value=el.textContent; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta); showToast('Copied to clipboard');
+    const ta = document.createElement('textarea');
+    ta.value=el.textContent; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Copied to clipboard');
   });
 }
 
@@ -2054,25 +1910,39 @@ function openOpenBetsModal() {
   const pendingBets = BETS.filter(b => b.won === 'Pending');
   const totalStake = pendingBets.reduce((s,b) => s + b.stake, 0);
   const totalReturn = pendingBets.reduce((s,b) => s + (b.stake * b.odds), 0);
+
   document.getElementById('openBetsModalCount').textContent = pendingBets.length;
-  document.getElementById('openBetsModalStake').textContent = `£${totalStake.toFixed(0)}`;
-  document.getElementById('openBetsModalReturn').textContent = `£${totalReturn.toFixed(0)}`;
+  document.getElementById('openBetsModalStake').textContent = `\u00a3${totalStake.toFixed(0)}`;
+  document.getElementById('openBetsModalReturn').textContent = `\u00a3${totalReturn.toFixed(0)}`;
+
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+
   let msg = '';
-  msg += `📊 *SYNDICATE — OPEN BETS*\n🗓 ${dateStr}\n${'━'.repeat(22)}\n\n`;
+  msg += `\U0001f4ca *SYNDICATE \u2014 OPEN BETS*\n`;
+  msg += `\U0001f5d3 ${dateStr}\n`;
+  msg += `\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n`;
+
   if(pendingBets.length === 0) {
     msg += `No open bets at the moment.\n`;
   } else {
     pendingBets.forEach((b, i) => {
       const selLine = [b.selection, b.line].filter(Boolean).join(' ');
       msg += `*${i+1}. ${b.player || b.fixture}*\n`;
-      msg += `   🏏 ${b.tournament}\n   📋 ${b.fixture}\n   📌 ${b.market}${selLine ? ' — ' + selLine : ''}\n`;
-      msg += `   💰 Stake: £${b.stake} @ ${b.odds}\n   🎯 Potential Return: £${(b.stake * b.odds).toFixed(0)}\n`;
+      msg += `   \U0001f3cf ${b.tournament}\n`;
+      msg += `   \U0001f4cb ${b.fixture}\n`;
+      msg += `   \U0001f4cc ${b.market}${selLine ? ' \u2014 ' + selLine : ''}\n`;
+      msg += `   \U0001f4b0 Stake: \u00a3${b.stake} @ ${b.odds}\n`;
+      msg += `   \U0001f3af Potential Return: \u00a3${(b.stake * b.odds).toFixed(0)}\n`;
       if(i < pendingBets.length - 1) msg += `\n`;
     });
   }
-  msg += `\n${'━'.repeat(22)}\n📦 *${pendingBets.length} open bet${pendingBets.length !== 1 ? 's' : ''}*\n💵 *Total staked: £${totalStake.toFixed(0)}*\n🏆 *Max return: £${totalReturn.toFixed(0)}*`;
+
+  msg += `\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n`;
+  msg += `\U0001f4e6 *${pendingBets.length} open bet${pendingBets.length !== 1 ? 's' : ''}*\n`;
+  msg += `\U0001f4b5 *Total staked: \u00a3${totalStake.toFixed(0)}*\n`;
+  msg += `\U0001f3c6 *Max return: \u00a3${totalReturn.toFixed(0)}*`;
+
   document.getElementById('openBetsContent').textContent = msg;
   document.getElementById('openBetsModal').classList.add('open');
 }
@@ -2080,19 +1950,21 @@ function openOpenBetsModal() {
 function copyOpenBets() {
   const text = document.getElementById('openBetsContent').textContent;
   navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard')).catch(() => {
-    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta); showToast('Copied to clipboard');
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Copied to clipboard');
   });
 }
 
 function sendWhatsApp() {
   const text = document.getElementById('openBetsContent').textContent;
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  const encoded = encodeURIComponent(text);
+  window.open(`https://wa.me/?text=${encoded}`, '_blank');
 }
 
 function initDashboard() {
   buildKPIs();
-  buildOpenBetsPage();
   buildEquityChart();
   buildMonthlyChart();
   buildWinLossChart();
