@@ -224,6 +224,7 @@ nav { display:flex; gap:2px; padding:0 40px; border-bottom:1px solid var(--borde
 .table-wrap::-webkit-scrollbar-track { background:var(--surface); }
 .table-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 table { width:100%; border-collapse:collapse; font-size:0.78rem; }
+tfoot td { position:sticky; bottom:0; z-index:1; }
 thead th { position:sticky; top:0; background:var(--surface2); padding:10px 12px; text-align:left; font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; border-bottom:1px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none; }
 thead th:hover { color:var(--accent); }
 tbody tr { border-bottom:1px solid rgba(30,45,58,0.5); transition:background 0.15s; }
@@ -320,6 +321,10 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 .toast.show { opacity:1; transform:translateY(0); }
 .toast.error { border-color:var(--red); color:var(--red); }
 
+
+/* Pending row highlight */
+tbody tr.row-pending { border-left: 3px solid var(--gold); }
+tbody tr.row-pending td:first-child { padding-left: 9px; }
 @media(max-width:1100px) { .kpi-row{grid-template-columns:repeat(3,1fr);} .member-grid{grid-template-columns:repeat(2,1fr);} .ob-hero{grid-template-columns:repeat(2,1fr);} }
 @media(max-width:700px) { header,nav,.page{padding-left:16px;padding-right:16px;} .kpi-row{grid-template-columns:repeat(2,1fr);} .grid-2,.grid-3,.grid-31{grid-template-columns:1fr;} .member-grid{grid-template-columns:1fr;} .ob-hero{grid-template-columns:repeat(2,1fr);} .ob-grid{grid-template-columns:1fr;} }
 .page.active .card { animation:fadeUp 0.3s ease both; }
@@ -680,6 +685,7 @@ tbody td { padding:9px 12px; white-space:nowrap; }
           </tr>
         </thead>
         <tbody id="betsBody"></tbody>
+        <tfoot id="betsFoot"></tfoot>
       </table>
     </div>
   </div>
@@ -1300,7 +1306,11 @@ function renderOpenBets() {
       <div class="ob-card-footer">
         <span class="ob-date-badge">${b.date}</span>
         <span class="ob-fixture-label">${b.fixture || '—'}</span>
-        ${currentRole === 'admin' ? `<button class="btn btn-secondary btn-sm" onclick="openEditBet(${b.id})" style="font-size:0.58rem;padding:4px 10px">✏ Edit</button>` : ''}
+        ${currentRole === 'admin' ? `<div style="display:flex;gap:5px;align-items:center">
+          <button class="btn btn-sm" onclick="quickSettle(${b.id},'Yes')" style="background:rgba(0,255,135,0.15);color:var(--green);border:1px solid rgba(0,255,135,0.3);font-size:0.58rem;padding:3px 8px">✓ Won</button>
+          <button class="btn btn-sm" onclick="quickSettle(${b.id},'No')" style="background:rgba(255,61,90,0.12);color:var(--red);border:1px solid rgba(255,61,90,0.3);font-size:0.58rem;padding:3px 8px">✗ Lost</button>
+          <button class="btn btn-secondary btn-sm" onclick="openEditBet(${b.id})" style="font-size:0.58rem;padding:3px 8px">✏</button>
+        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1436,7 +1446,7 @@ function buildTopBets() {
     </div>`).join('');
 }
 
-let sortKey='id', sortDir=1, currentBets=[...BETS];
+let sortKey='id', sortDir=-1, currentBets=[...BETS];
 
 function populateFilters() {
   const addOpts=(id,arr)=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;arr.forEach(v=>{if(![...el.options].map(o=>o.value).includes(v)){const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);}});el.value=cur;};
@@ -1462,7 +1472,7 @@ function renderTable() {
   currentBets.sort((a,b)=>{let va=a[sortKey],vb=b[sortKey];if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();return va<vb?-sortDir:va>vb?sortDir:0;});
   document.getElementById('tableCount').textContent=`${currentBets.length} bets`;
   document.getElementById('betsBody').innerHTML=currentBets.map(b=>`
-    <tr>
+    <tr class="${b.won==='Pending'?'row-pending':''}">
       <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:0.65rem">${b.id}</td>
       <td style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted)">${b.date}</td>
       <td>${b.bookmaker||'\u2014'}</td>
@@ -1480,6 +1490,20 @@ function renderTable() {
       <td class="admin-only"><button class="btn btn-secondary btn-sm" onclick="openEditBet(${b.id})" style="font-size:0.58rem">\u270f Edit</button></td>
     </tr>`).join('');
   if(currentRole) applyRole(currentRole);
+  // Filtered totals footer
+  const filtStake = currentBets.reduce((s,b)=>s+b.stake,0);
+  const filtPL = currentBets.filter(b=>b.won!=='Pending').reduce((s,b)=>s+b.pl,0);
+  const filtWon = currentBets.filter(b=>b.won==='Yes').length;
+  const filtLost = currentBets.filter(b=>b.won==='No').length;
+  const filtPend = currentBets.filter(b=>b.won==='Pending').length;
+  const betsFoot = document.getElementById('betsFoot');
+  if(betsFoot) betsFoot.innerHTML = `<tr style="border-top:2px solid var(--border);background:var(--surface2)">
+    <td colspan="10" style="padding:9px 12px;font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);letter-spacing:1px">TOTALS • ${filtWon}W · ${filtLost}L · ${filtPend} PENDING</td>
+    <td style="padding:9px 12px;font-family:'DM Mono',monospace;font-weight:500;color:var(--text)">£${filtStake.toLocaleString()}</td>
+    <td></td><td></td>
+    <td style="padding:9px 12px;font-family:'DM Mono',monospace;font-weight:500" class="${filtPL>=0?'pl-pos':'pl-neg'}">${filtPL>=0?'+':''}£${Math.abs(filtPL).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</td>
+    <td class="admin-only"></td>
+  </tr>`;
 }
 
 function sortTable(key) {
@@ -1892,6 +1916,19 @@ function showToast(msg, type='') {
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
+async function quickSettle(id, result) {
+  const b = BETS.find(x => x.id === id);
+  if(!b) return;
+  b.won = result;
+  if(result === 'Yes') { b.payout = parseFloat((b.stake * b.odds).toFixed(2)); b.pl = parseFloat((b.payout - b.stake).toFixed(2)); }
+  else if(result === 'No') { b.pl = -b.stake; b.payout = 0; }
+  recalcRunning();
+  refreshAll();
+  showToast('Saving...');
+  try { await sbUpdateBet(b); showToast(`Bet #${b.id} marked ${result === 'Yes' ? '\u2705 Won' : '\u274c Lost'}`); }
+  catch(e) { showToast('Save failed', 'error'); console.error(e); }
+}
+
 function refreshAll() {
   buildKPIs();
   buildOpenBetsPage();
@@ -2125,3 +2162,11 @@ function initDashboard() {
 </script>
 </body>
 </html>
+✓ Default sort descending
+✓ Pending row CSS
+✓ Pending row class
+✓ tfoot element
+✓ tfoot sticky CSS
+✓ Filtered totals footer
+✓ Quick-settle buttons
+✓ quickSettle function
