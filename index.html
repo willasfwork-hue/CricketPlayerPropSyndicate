@@ -313,7 +313,7 @@ tbody td { padding:9px 12px; white-space:nowrap; }
 .member-stat { background:var(--surface2); border-radius:5px; padding:8px 10px; }
 .member-stat-label { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
 .member-stat-val { font-family:'DM Mono',monospace; font-size:0.82rem; font-weight:500; }
-.member-actions { display:flex; gap:8px; margin-top:14px; }
+.member-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
 
 .ledger-section { margin-top:8px; }
 
@@ -1220,14 +1220,12 @@ function buildOpenBetsPage() {
   const totalProfit = totalReturn - totalStake;
   const avgOdds = pending.length ? (pending.reduce((s,b)=>s+b.odds,0)/pending.length) : 0;
 
-  // Update nav badge
   const navBadge = document.getElementById('navPendingBadge');
   if(navBadge) {
     navBadge.textContent = pending.length;
     navBadge.className = 'nav-pending-badge' + (pending.length > 0 ? ' pulse-anim' : '');
   }
 
-  // Hero stats
   document.getElementById('obHeroStats').innerHTML = [
     {label:'Open Bets', value:pending.length, cls:'gold', color:'gold', sub:'Awaiting settlement'},
     {label:'Total Staked', value:`\u00a3${fmt(totalStake)}`, cls:'accent', color:'accent', sub:'Capital at risk'},
@@ -1239,7 +1237,6 @@ function buildOpenBetsPage() {
     <div class="ob-stat-sub">${s.sub}</div>
   </div>`).join('');
 
-  // Populate tournament filter
   const tourneySel = document.getElementById('obFilterTourney');
   const currentTourney = tourneySel.value;
   const tourneys = [...new Set(pending.map(b=>b.tournament).filter(Boolean))].sort();
@@ -1272,7 +1269,6 @@ function renderOpenBets() {
     const selChipClass = b.selection === 'Under' ? 'sel-under' : b.selection === 'Over' ? 'sel-over' : '';
     const selLine = [b.selection, b.line ? b.line : null].filter(Boolean).join(' ');
     const potReturn = (b.stake * b.odds).toFixed(0);
-    const potProfit = (b.stake * b.odds - b.stake).toFixed(0);
     return `<div class="ob-card" style="animation-delay:${i*0.04}s">
       <div class="ob-card-header">
         <div class="ob-card-num">#${i+1}</div>
@@ -1342,7 +1338,6 @@ function buildKPIs() {
 
   document.getElementById('betCount').textContent = `${BETS.length} BETS LOADED`;
 
-  // Update nav pending badge
   const navBadge = document.getElementById('navPendingBadge');
   if(navBadge) {
     navBadge.textContent = pending.length;
@@ -1490,7 +1485,6 @@ function renderTable() {
       <td class="admin-only"><button class="btn btn-secondary btn-sm" onclick="openEditBet(${b.id})" style="font-size:0.58rem">\u270f Edit</button></td>
     </tr>`).join('');
   if(currentRole) applyRole(currentRole);
-  // Filtered totals footer
   const filtStake = currentBets.reduce((s,b)=>s+b.stake,0);
   const filtPL = currentBets.filter(b=>b.won!=='Pending').reduce((s,b)=>s+b.pl,0);
   const filtWon = currentBets.filter(b=>b.won==='Yes').length;
@@ -1815,6 +1809,7 @@ function buildMembersPage() {
       <div class="member-actions admin-only">
         <button class="btn btn-green btn-sm" onclick="openTx('${m.initials}','Deposit')">+ Deposit</button>
         <button class="btn btn-red btn-sm" onclick="openTx('${m.initials}','Withdrawal')">- Withdraw</button>
+        <button class="btn btn-secondary btn-sm" onclick="removeMember('${m.initials}')" style="border-color:rgba(255,61,90,0.3);color:var(--red);font-size:0.58rem" title="Remove member">🗑</button>
       </div>
     </div>`).join('');
 
@@ -1893,6 +1888,43 @@ function addNewMember() {
   const _mtx=TRANSACTIONS[TRANSACTIONS.length-1];
   showToast('Saving...');
   Promise.all([sbEnsureMember(initials,name||initials,MEMBER_COLORS[initials]),sbAddTransaction(_mtx)]).then(()=>showToast(`${initials} saved`)).catch(e=>{showToast('Save failed','error');console.error(e);});
+}
+
+// ============================================================
+// REMOVE MEMBER
+// ============================================================
+async function removeMember(initials) {
+  const name = MEMBER_NAMES[initials] || initials;
+  const txCount = TRANSACTIONS.filter(t => t.initials === initials).length;
+  if(!confirm(`Remove member ${initials} (${name})?\n\nThis will permanently delete their member record and ${txCount} transaction(s) from the database.\n\nThis cannot be undone.`)) return;
+
+  // Remove from local state
+  TRANSACTIONS = TRANSACTIONS.filter(t => t.initials !== initials);
+  delete MEMBER_NAMES[initials];
+  delete MEMBER_COLORS[initials];
+
+  buildMembersPage();
+  buildKPIs();
+  showToast(`Removing ${initials}...`);
+
+  try {
+    // Delete member record
+    const { error: mErr } = await sb.from('members').delete().eq('key', initials);
+    if(mErr) throw mErr;
+
+    // Fetch and delete all their transactions by Supabase row ID
+    const { data: txRows, error: txFetchErr } = await sb.from('transactions').select('id, data');
+    if(txFetchErr) throw txFetchErr;
+    const toDelete = txRows.filter(r => r.data?.initials === initials).map(r => r.id);
+    if(toDelete.length > 0) {
+      const { error: txDelErr } = await sb.from('transactions').delete().in('id', toDelete);
+      if(txDelErr) throw txDelErr;
+    }
+    showToast(`${initials} removed`);
+  } catch(e) {
+    showToast('Remove failed — check console', 'error');
+    console.error(e);
+  }
 }
 
 let analyticsReady=false, membersReady=false;
