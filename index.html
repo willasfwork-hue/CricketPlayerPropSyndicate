@@ -735,7 +735,7 @@ tbody tr.row-pending td:first-child { padding-left: 9px; }
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>Date</th><th>Member</th><th>Action</th><th>Amount</th><th>Unit Price</th><th>Units</th><th>Note</th>
+          <th>Date</th><th>Member</th><th>Action</th><th>Amount</th><th>Unit Price</th><th>Units</th><th>Note</th><th class="admin-only"></th>
         </tr></thead>
         <tbody id="ledgerBody"></tbody>
       </table>
@@ -995,6 +995,11 @@ tbody tr.row-pending td:first-child { padding-left: 9px; }
     <div class="form-group">
       <label class="form-label">Amount (£)</label>
       <input type="number" class="form-input" id="tx_amount" placeholder="e.g. 500" min="1">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Unit Price Override (£) <span style="color:var(--muted);font-size:0.58rem;letter-spacing:0;text-transform:none">— leave blank to use current price</span></label>
+      <input type="number" class="form-input" id="tx_unit_price_override" placeholder="Auto (current price)" min="0.0001" step="0.0001">
+      <div style="font-size:0.62rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:5px" id="tx_price_hint"></div>
     </div>
     <div class="form-group">
       <label class="form-label">Note (optional)</label>
@@ -1828,6 +1833,7 @@ function buildMembersPage() {
       <td style="font-family:'DM Mono',monospace;color:var(--muted)">\u00a3${tx.unitPrice.toFixed(4)}</td>
       <td style="font-family:'DM Mono',monospace;color:var(--muted)">${tx.units.toFixed(4)}</td>
       <td style="color:var(--muted)">${tx.note}</td>
+      <td class="admin-only"><button class="btn btn-secondary btn-sm" onclick="deleteTx(this, '${tx._sbId||''}')" style="font-size:0.58rem;color:var(--red);border-color:rgba(255,61,90,0.3)" title="Delete transaction">🗑</button></td>
     </tr>`).join('');
 
   if(currentRole) applyRole(currentRole);
@@ -1840,6 +1846,9 @@ function openTx(initials, action) {
   document.getElementById('txConfirmBtn').className = `btn ${action==='Deposit'?'btn-green':'btn-red'} btn-sm`;
   document.getElementById('tx_date').value = new Date().toISOString().split('T')[0];
   document.getElementById('tx_amount').value=''; document.getElementById('tx_note').value='';
+  document.getElementById('tx_unit_price_override').value='';
+  const currentPrice = getMemberStats().unitPrice;
+  document.getElementById('tx_price_hint').textContent = `Current unit price: £${currentPrice.toFixed(4)}`;
   document.getElementById('txModal').classList.add('open');
 }
 
@@ -1847,7 +1856,9 @@ function confirmTransaction() {
   const amount = parseFloat(document.getElementById('tx_amount').value);
   const note = document.getElementById('tx_note').value.trim() || txAction;
   if(!amount || isNaN(amount) || amount <= 0) { showToast('Enter a valid amount','error'); return; }
-  const {unitPrice} = getMemberStats();
+  const currentStats = getMemberStats();
+  const overrideInput = parseFloat(document.getElementById('tx_unit_price_override').value);
+  const unitPrice = (!isNaN(overrideInput) && overrideInput > 0) ? overrideInput : currentStats.unitPrice;
   const units = txAction==='Deposit' ? amount/unitPrice : -(amount/unitPrice);
   const txDateInput = document.getElementById('tx_date').value;
   let txDateStr;
@@ -1867,6 +1878,24 @@ function confirmTransaction() {
   const _tx=TRANSACTIONS[TRANSACTIONS.length-1];
   showToast('Saving...');
   sbAddTransaction(_tx).then(()=>showToast('Transaction saved')).catch(e=>{showToast('Save failed','error');console.error(e);});
+}
+
+async function deleteTx(btn, sbId) {
+  if(!confirm('Delete this transaction? This will affect member unit holdings and P&L.')) return;
+  const row = btn.closest('tr');
+  // Find and remove from TRANSACTIONS array
+  const idx = TRANSACTIONS.findIndex(tx => tx._sbId === sbId);
+  if(idx !== -1) TRANSACTIONS.splice(idx, 1);
+  buildMembersPage();
+  buildKPIs();
+  if(sbId) {
+    showToast('Deleting...');
+    try {
+      const {error} = await sb.from('transactions').delete().eq('id', sbId);
+      if(error) throw error;
+      showToast('Transaction deleted');
+    } catch(e) { showToast('Delete failed','error'); console.error(e); }
+  }
 }
 
 function openAddMember() {
